@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Campus Assist Widget Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f5f5f5; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    p { color: #555; margin-bottom: 1.5rem; }
+    label { font-size: 0.9rem; font-weight: 600; }
+    select { margin-left: 0.5rem; padding: 0.3rem 0.6rem; border-radius: 4px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Campus Assist — Widget Test Page</h1>
+  <p>The chat widget should appear in the bottom-right corner.</p>
+
+  <label>City:
+    <select id="tenant-select" onchange="location.search='?tenant='+this.value">
+      <option value="">Loading…</option>
+    </select>
+  </label>
+
+  <script>
+    const currentTenant = new URLSearchParams(location.search).get('tenant') || '';
+
+    fetch('/api/tenants')
+      .then(r => r.json())
+      .then(tenants => {
+        const sel = document.getElementById('tenant-select');
+        sel.innerHTML = tenants.map(t =>
+          `<option value="${t.slug}"${t.slug === currentTenant ? ' selected' : ''}>${t.name}</option>`
+        ).join('');
+
+        // If no tenant in URL yet, redirect to first
+        if (!currentTenant && tenants.length > 0) {
+          location.search = '?tenant=' + tenants[0].slug;
+        }
+      });
+
+    if (currentTenant) {
+      const s = document.createElement('script');
+      s.src = '/static/widget.js';
+      s.setAttribute('data-tenant', currentTenant);
+      s.setAttribute('data-api-url', location.origin);
+      s.setAttribute('data-ws-url', location.origin.replace(/^http(s?)/, 'ws$1').replace(/:3000/, ':3001'));
+      s.async = true;
+      document.body.appendChild(s);
+    }
+  </script>
+</body>
+</html>

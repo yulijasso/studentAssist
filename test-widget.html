@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Assist Widget Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1a1a1a; }
+    p { color: #555; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1>City of Pharr - Test Page</h1>
+  <p>This is a test page simulating an external site embedding the Campus Assist widget. The chat widget should appear in the bottom-right corner.</p>
+  <p>Try asking questions like "What are the city office hours?" or "How do I pay my water bill?"</p>
+
+  <script
+    src="http://localhost:3000/static/widget.js"
+    data-tenant="city-of-pharr"
+    data-api-url="http://localhost:3000"
+    data-ws-url="ws://localhost:3001"
+    async
+  ></script>
+
+  <script src="/static/widget.js" data-tenant="city-of-pharr" async></script>
+</body>
+</html>

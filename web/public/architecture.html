@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Assist — Architecture</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.25rem;
+      color: #f8fafc;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Grid layout ─────────────────────────────────────────────────────────── */
+
+    .diagram {
+      display: grid;
+      grid-template-columns: 220px 220px 220px 220px 220px;
+      grid-template-rows: auto auto auto auto auto;
+      gap: 1rem;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ── Cards ───────────────────────────────────────────────────────────────── */
+
+    .card {
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid;
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .card-item {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      padding: 2px 0;
+      line-height: 1.5;
+    }
+
+    .card-item code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.68rem;
+      background: rgba(255,255,255,0.07);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #cbd5e1;
+    }
+
+    .card-item .dim { color: #475569; }
+
+    /* ── Colour themes ───────────────────────────────────────────────────────── */
+
+    .blue   { background: #0f172a; border-color: #1d4ed8; }
+    .blue   .card-title { color: #60a5fa; }
+
+    .green  { background: #052e16; border-color: #15803d; }
+    .green  .card-title { color: #4ade80; }
+
+    .purple { background: #1e1b4b; border-color: #6d28d9; }
+    .purple .card-title { color: #a78bfa; }
+
+    .orange { background: #1c0a00; border-color: #c2410c; }
+    .orange .card-title { color: #fb923c; }
+
+    .teal   { background: #042f2e; border-color: #0f766e; }
+    .teal   .card-title { color: #2dd4bf; }
+
+    .slate  { background: #0f172a; border-color: #334155; }
+    .slate  .card-title { color: #94a3b8; }
+
+    .red    { background: #1c0000; border-color: #991b1b; }
+    .red    .card-title { color: #f87171; }
+
+    .yellow { background: #1c1a00; border-color: #a16207; }
+    .yellow .card-title { color: #facc15; }
+
+    /* ── Grid placements ─────────────────────────────────────────────────────── */
+
+    .g-widget     { grid-column: 3; grid-row: 1; }
+    .g-http       { grid-column: 2; grid-row: 2; }
+    .g-ws         { grid-column: 4; grid-row: 2; }
+    .g-trpc       { grid-column: 2; grid-row: 3; }
+    .g-agent      { grid-column: 3; grid-row: 3; }
+    .g-memory     { grid-column: 4; grid-row: 3; }
+    .g-llm        { grid-column: 2; grid-row: 4; }
+    .g-tool       { grid-column: 3; grid-row: 4; }
+    .g-redis      { grid-column: 4; grid-row: 4; }
+    .g-db         { grid-column: 5; grid-row: 3; }
+    .g-dashboard  { grid-column: 1; grid-row: 3; }
+    .g-config     { grid-column: 1; grid-row: 4; }
+    .g-logger     { grid-column: 5; grid-row: 4; }
+
+    /* ── Arrow SVG layer ─────────────────────────────────────────────────────── */
+
+    .arrows-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Flow section below diagram ──────────────────────────────────────────── */
+
+    .flow-section {
+      margin-top: 2.5rem;
+      max-width: 1140px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .flow-section h2 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    .flow-steps {
+      display: flex;
+      gap: 0;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+    }
+
+    .flow-step .num {
+      background: #3b82f6;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.65rem;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .flow-arrow {
+      color: #334155;
+      font-size: 1.1rem;
+      padding: 0 4px;
+    }
+
+    /* ── Redis key schema ─────────────────────────────────────────────────────── */
+
+    .key-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .key-item {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .key-item code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.7rem;
+      color: #60a5fa;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .key-item p {
+      font-size: 0.71rem;
+      color: #64748b;
+    }
+
+    /* ── Port badges ─────────────────────────────────────────────────────────── */
+
+    .badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .badge-blue   { background: #1d4ed8; color: #bfdbfe; }
+    .badge-green  { background: #15803d; color: #bbf7d0; }
+    .badge-orange { background: #c2410c; color: #fed7aa; }
+  </style>
+</head>
+<body>
+
+  <h1>Campus Assist — System Architecture</h1>
+  <p class="subtitle">Multi-tenant civic AI chatbot · Phase 1: Tavily web search · LangGraph 1.x streaming</p>
+
+  <!-- ── Component diagram ─────────────────────────────────────────────────── -->
+
+  <div style="position:relative; max-width:1160px; margin:0 auto;">
+    <div class="diagram">
+
+      <!-- Widget -->
+      <div class="card blue g-widget">
+        <div class="card-title">Widget (Browser) <span class="badge badge-blue">IIFE</span></div>
+        <div class="card-item"><code>widget/src/index.ts</code> bootstrap</div>
+        <div class="card-item"><code>chat-ui.ts</code> Shadow DOM UI</div>
+        <div class="card-item"><code>websocket-client.ts</code> WS + backoff</div>
+        <div class="card-item"><code>config.ts</code> tenant config fetch</div>
+        <div class="card-item"><code>session.ts</code> localStorage session ID</div>
+        <div class="card-item dim">Built by Vite → widget.js</div>
+      </div>
+
+      <!-- HTTP Server -->
+      <div class="card slate g-http">
+        <div class="card-title">HTTP Server <span class="badge badge-blue">:3000</span></div>
+        <div class="card-item"><code>server.ts</code> Next.js handler</div>
+        <div class="card-item"><code>app/api/trpc/[trpc]</code> tRPC endpoint</div>
+        <div class="card-item"><code>GET /api/tenants/[slug]</code> public REST</div>
+        <div class="card-item dim">Returns tenant config to widget</div>
+      </div>
+
+      <!-- WebSocket Server -->
+      <div class="card teal g-ws">
+        <div class="card-title">WebSocket Server <span class="badge badge-green">:3001</span></div>
+        <div class="card-item"><code>server.ts</code> isolated HTTP server</div>
+        <div class="card-item">Auth handshake (10 s timeout)</div>
+        <div class="card-item">Streams tokens → browser</div>
+        <div class="card-item"><code>{ type: "token" | "done" | "error" }</code></div>
+        <div class="card-item dim">Separate from Next.js to avoid upgrade conflicts</div>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="card purple g-dashboard">
+        <div class="card-title">Admin Dashboard</div>
+        <div class="card-item"><code>app/dashboard/</code> pages</div>
+        <div class="card-item">Tenant list + detail</div>
+        <div class="card-item">Department CRUD</div>
+        <div class="card-item">API key rotation</div>
+        <div class="card-item dim">Next.js App Router (Server Components)</div>
+      </div>
+
+      <!-- tRPC -->
+      <div class="card purple g-trpc">
+        <div class="card-title">tRPC Routers</div>
+        <div class="card-item"><code>chat.send</code> quota→cache→agent</div>
+        <div class="card-item"><code>tenants.*</code> admin CRUD</div>
+        <div class="card-item"><code>departments.*</code> admin CRUD</div>
+        <div class="card-item"><code>health.ping</code></div>
+        <div class="card-item dim">tenantProcedure / adminProcedure guards</div>
+      </div>
+
+      <!-- Agent -->
+      <div class="card orange g-agent">
+        <div class="card-title">LangGraph Agent</div>
+        <div class="card-item"><code>executor.ts</code> createReactAgent</div>
+        <div class="card-item">Cache: (tenant, deptHash) → agent</div>
+        <div class="card-item"><code>invokeAgent()</code> sync</div>
+        <div class="card-item"><code>streamAgent()</code> token stream</div>
+        <div class="card-item"><code>prompts.ts</code> system prompt + dept routing</div>
+      </div>
+
+      <!-- Session Memory -->
+      <div class="card teal g-memory">
+        <div class="card-title">Session Memory</div>
+        <div class="card-item"><code>memory/session.ts</code></div>
+        <div class="card-item">Load BaseMessage[] from Redis</div>
+        <div class="card-item">Window k=6 pairs (12 msgs)</div>
+        <div class="card-item">Save after each turn</div>
+        <div class="card-item">TTL: 30 min (reset on access)</div>
+      </div>
+
+      <!-- LLM Factory -->
+      <div class="card yellow g-llm">
+        <div class="card-title">LLM Factory</div>
+        <div class="card-item"><code>llm/factory.ts</code> LRU cache (64)</div>
+        <div class="card-item">Groq <code>llama-3.3-70b</code> (default)</div>
+        <div class="card-item">Anthropic Claude (optional)</div>
+        <div class="card-item"><code>groq_rate_limiter.ts</code></div>
+        <div class="card-item">p-retry backoff on 429 (4 attempts)</div>
+      </div>
+
+      <!-- Tavily Tool -->
+      <div class="card red g-tool">
+        <div class="card-title">Tavily Web Search Tool</div>
+        <div class="card-item"><code>tools/web_search.ts</code></div>
+        <div class="card-item">AsyncLocalStorage → tenant context</div>
+        <div class="card-item">Searches <code>tenant.searchDomains</code></div>
+        <div class="card-item">Filters score ≥ 0.3</div>
+        <div class="card-item">Returns top 5 results (title, content, url)</div>
+      </div>
+
+      <!-- Redis -->
+      <div class="card green g-redis">
+        <div class="card-title">Redis <span class="badge badge-green">ioredis</span></div>
+        <div class="card-item"><code>tenant:apikey:{key}</code> TTL 1d</div>
+        <div class="card-item"><code>dept_list:{tenantId}</code> TTL 1d</div>
+        <div class="card-item"><code>session:{id}:memory</code> TTL 30m</div>
+        <div class="card-item"><code>cache:{tenantId}:{hash}</code> response cache</div>
+        <div class="card-item"><code>quota:{tenantId}:{date}</code> daily counter</div>
+      </div>
+
+      <!-- Postgres -->
+      <div class="card green g-db">
+        <div class="card-title">PostgreSQL 16 <span class="badge badge-green">Drizzle</span></div>
+        <div class="card-item"><code>tenants</code> — config, api_key, domains</div>
+        <div class="card-item"><code>departments</code> — phone, hours, keywords</div>
+        <div class="card-item"><code>conversations</code> — sessionId per tenant</div>
+        <div class="card-item"><code>messages</code> — role, content, timestamp</div>
+        <div class="card-item dim">Migrations via drizzle-kit</div>
+      </div>
+
+      <!-- Config -->
+      <div class="card slate g-config">
+        <div class="card-title">Config</div>
+        <div class="card-item"><code>server/config.ts</code> zod + t3-env</div>
+        <div class="card-item"><code>setup-env.cjs</code> --require preload</div>
+        <div class="card-item">LLM_PROVIDER, LLM_MODEL</div>
+        <div class="card-item">TAVILY_API_KEY, GROQ_API_KEY</div>
+        <div class="card-item">PERSIST_CHAT_MESSAGES</div>
+      </div>
+
+      <!-- Logger -->
+      <div class="card slate g-logger">
+        <div class="card-title">Structured Logs <span class="badge badge-orange">pino</span></div>
+        <div class="card-item"><code>server/logger.ts</code></div>
+        <div class="card-item"><code>wsLog</code> WS connect/auth/msg</div>
+        <div class="card-item"><code>agentLog</code> LLM calls, tool use</div>
+        <div class="card-item"><code>httpLog</code> tRPC requests</div>
+        <div class="card-item"><code>memLog</code> Redis memory ops</div>
+        <div class="card-item dim">Output → <code>logs/app.log</code></div>
+      </div>
+
+    </div><!-- /diagram -->
+  </div>
+
+  <!-- ── Request flow ────────────────────────────────────────────────────────── -->
+
+  <div class="flow-section">
+    <h2>WebSocket Chat Flow</h2>
+    <div class="flow-steps">
+      <div class="flow-step"><span class="num">1</span>Widget fetches <code>/api/tenants/{slug}</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">2</span>WS connect :3001 + auth frame</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">3</span>Validate API key → Redis cache</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">4</span>User sends message</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">5</span>Quota check → Response cache check</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">6</span>Load session history (Redis)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">7</span>streamAgent() via LangGraph</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">8</span>Tavily search on city domains</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">9</span>Stream tokens → browser</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="num">10</span>Save history + persist to DB</div>
+    </div>
+  </div>
+
+  <!-- ── Redis key schema ────────────────────────────────────────────────────── -->
+
+  <div class="flow-section">
+    <h2>Redis Key Schema</h2>
+    <div class="key-grid">
+      <div class="key-item">
+        <code>tenant:apikey:{apiKey}</code>
+        <p>Cached tenant row · TTL 1 day</p>
+      </div>
+      <div class="key-item">
+        <code>dept_list:{tenantId}</code>
+        <p>Cached departments array · TTL 1 day</p>
+      </div>
+      <div class="key-item">
+        <code>session:{sessionId}:memory</code>
+        <p>BaseMessage[] history · TTL 30 min, window k=6</p>
+      </div>
+      <div class="key-item">
+        <code>cache:{tenantId}:{sha256(msg)[0:16]}</code>
+        <p>Response cache (answer + sources) · configurable TTL</p>
+      </div>
+      <div class="key-item">
+        <code>quota:{tenantId}:{YYYY-MM-DD}</code>
+        <p>Daily request counter · TTL resets at midnight UTC</p>
+      </div>
+      <div class="key-item">
+        <code>logs/app.log</code>
+        <p>pino JSON log file — tail -f | npx pino-pretty</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Monorepo layout ─────────────────────────────────────────────────────── -->
+
+  <div class="flow-section" style="margin-bottom: 3rem;">
+    <h2>Monorepo Layout</h2>
+    <div class="key-grid" style="grid-template-columns: 1fr 1fr; max-width: 780px;">
+      <div class="key-item">
+        <code>city_bot/web/</code>
+        <p>Next.js 16 app · tRPC backend · admin dashboard · custom Node.js server</p>
+      </div>
+      <div class="key-item">
+        <code>city_bot/widget/</code>
+        <p>Vite IIFE build · Shadow DOM chat widget · zero runtime deps</p>
+      </div>
+      <div class="key-item">
+        <code>docker-compose.yml</code>
+        <p>postgres:16-alpine + redis:7-alpine</p>
+      </div>
+      <div class="key-item">
+        <code>Makefile</code>
+        <p>make up · make web-dev · make web-check · make widget-copy · make db-seed</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
