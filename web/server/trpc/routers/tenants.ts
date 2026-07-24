@@ -64,6 +64,7 @@ export const tenantsRouter = router({
         websiteDomain: tenant.websiteDomain,
         apiKey: tenant.apiKey,
         location: tenant.location,
+        brandColor: tenant.widgetSettings?.primaryColor ?? null,
       };
     }),
 

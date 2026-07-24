@@ -39,7 +39,11 @@ export default function SettingsPage() {
 
   const utils = trpc.useUtils();
   const updateMut = trpc.settings.update.useMutation({
-    onSuccess: () => utils.settings.get.invalidate(),
+    onSuccess: () => {
+      utils.settings.get.invalidate();
+      // Refresh the tenant used by the nav so brand color/name update live.
+      utils.tenants.getBySlug.invalidate();
+    },
   });
 
   const apiKey = settingsQuery.data?.apiKey ?? "";
