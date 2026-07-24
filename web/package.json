@@ -28,6 +28,7 @@
     "@langchain/core": "^1.1.32",
     "@langchain/groq": "^1.1.5",
     "@langchain/langgraph": "^1.2.2",
+    "@langchain/openai": "^1.3.0",
     "@metamorph/trpc-panel": "^1.0.5",
     "@sendgrid/mail": "^8.1.6",
     "@t3-oss/env-nextjs": "^0.13.9",
