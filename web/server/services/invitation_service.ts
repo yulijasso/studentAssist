@@ -93,6 +93,32 @@ export async function listInvitations(db: DB) {
     .orderBy(invitations.createdAt);
 }
 
+/** Same as {@link listInvitations} but scoped to a single tenant. */
+export async function listInvitationsByTenant(db: DB, tenantId: string) {
+  return db
+    .select({
+      id: invitations.id,
+      email: invitations.email,
+      tenantId: invitations.tenantId,
+      roleId: invitations.roleId,
+      departmentId: invitations.departmentId,
+      token: invitations.token,
+      expiresAt: invitations.expiresAt,
+      acceptedAt: invitations.acceptedAt,
+      createdAt: invitations.createdAt,
+      roleName: roles.name,
+      tenantName: tenants.name,
+      tenantSlug: tenants.slug,
+      departmentName: departments.name,
+    })
+    .from(invitations)
+    .innerJoin(roles, eq(invitations.roleId, roles.id))
+    .leftJoin(tenants, eq(invitations.tenantId, tenants.id))
+    .leftJoin(departments, eq(invitations.departmentId, departments.id))
+    .where(eq(invitations.tenantId, tenantId))
+    .orderBy(invitations.createdAt);
+}
+
 export async function revokeInvitation(db: DB, id: string) {
   const [deleted] = await db.delete(invitations).where(eq(invitations.id, id)).returning();
   return !!deleted;

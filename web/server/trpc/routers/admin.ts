@@ -20,14 +20,7 @@ import {
 import { sendInvitationEmail } from "@/server/services/email_service";
 import { getUserByClerkId } from "@/server/services/user_service";
 import { getCurrentUsage } from "@/server/services/quota_service";
-
-/**
- * Permanent tech admin emails that cannot be removed or demoted.
- */
-const PROTECTED_ADMINS = [
-  "yulianadenissejasso@gmail.com",
-  "abdulbasitm810@gmail.com",
-];
+import { PROTECTED_ADMINS } from "../guards";
 
 export const adminRouter = router({
   // ── Overview ───────────────────────────────────────────────────────────────
