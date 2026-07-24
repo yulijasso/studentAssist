@@ -78,6 +78,7 @@ export const adminRouter = router({
         location: tenants.location,
         latitude: tenants.latitude,
         longitude: tenants.longitude,
+        widgetSettings: tenants.widgetSettings,
         createdAt: tenants.createdAt,
       })
       .from(tenants)
@@ -94,8 +95,9 @@ export const adminRouter = router({
 
     const countMap = new Map(convoCounts.map((c) => [c.tenantId, c.count]));
 
-    return cities.map((city) => ({
+    return cities.map(({ widgetSettings, ...city }) => ({
       ...city,
+      brandColor: widgetSettings?.primaryColor ?? null,
       conversationCount: countMap.get(city.id) ?? 0,
     }));
   }),
