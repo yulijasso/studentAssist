@@ -17,6 +17,7 @@ import { settingsRouter } from "./routers/settings";
 import { healthRouter } from "./routers/health";
 import { macrosRouter } from "./routers/macros";
 import { adminRouter } from "./routers/admin";
+import { teamRouter } from "./routers/team";
 import { meRouter } from "./routers/me";
 
 export const appRouter = router({
@@ -29,6 +30,7 @@ export const appRouter = router({
   macros: macrosRouter,
   health: healthRouter,
   admin: adminRouter,
+  team: teamRouter,
   me: meRouter,
 });
 

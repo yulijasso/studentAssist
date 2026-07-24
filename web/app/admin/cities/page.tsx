@@ -41,7 +41,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { FiRefreshCw, FiEdit2, FiPlus, FiMap, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiRefreshCw, FiEdit2, FiPlus, FiMap, FiTrash2, FiSearch, FiExternalLink } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
 
 const CityMap = dynamic(() => import("@/components/CityMap"), { ssr: false });
@@ -228,6 +228,18 @@ export default function AdminCitiesPage() {
                 <Td py={0.5} isNumeric>{city.conversationCount}</Td>
                 <Td py={0.5}>
                   <Flex gap={1}>
+                    <Tooltip label="Open dashboard">
+                      <IconButton
+                        as={NextLink}
+                        href={`/dashboard/${city.slug}`}
+                        aria-label="Open dashboard"
+                        icon={<FiExternalLink />}
+                        size="xs"
+                        variant="ghost"
+                        color="gray.400"
+                        _hover={{ color: "blue.500" }}
+                      />
+                    </Tooltip>
                     <Tooltip label="Edit city">
                       <IconButton
                         as={NextLink}

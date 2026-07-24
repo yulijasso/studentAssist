@@ -32,6 +32,7 @@ import {
   FiBarChart2,
   FiSettings,
   FiShield,
+  FiUserPlus,
 } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
 import { useTenant } from "@/lib/use-tenant";
@@ -40,6 +41,7 @@ import { useRole } from "@/lib/use-role";
 const NAV_ITEMS = [
   { label: "Knowledge Base", href: "/knowledge-base", icon: FiBook, adminOnly: true },
   { label: "Departments", href: "/departments", icon: FiUsers, adminOnly: true },
+  { label: "Team", href: "/team", icon: FiUserPlus, adminOnly: true },
   { label: "Conversations", href: "/conversations", icon: FiMessageSquare, adminOnly: false },
   { label: "Analytics", href: "/analytics", icon: FiBarChart2, adminOnly: true },
   { label: "Settings", href: "/settings", icon: FiSettings, adminOnly: true },
