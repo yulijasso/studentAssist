@@ -138,7 +138,7 @@ export default function AdminSystemPage() {
           )}
         </Box>
 
-        {/* By City */}
+        {/* By Institution */}
         <Box
           bg="white"
           border="1px solid"
@@ -147,13 +147,13 @@ export default function AdminSystemPage() {
           p={6}
         >
           <Text fontSize="sm" fontWeight="600" color="gray.700" mb={4}>
-            Users by City
+            Users by Institution
           </Text>
           {stats?.byCity && stats.byCity.length > 0 ? (
             <Table size="sm" variant="simple">
               <Thead>
                 <Tr>
-                  <Th px={0} fontSize="10px">City</Th>
+                  <Th px={0} fontSize="10px">Institution</Th>
                   <Th px={0} fontSize="10px" isNumeric>Users</Th>
                 </Tr>
               </Thead>
@@ -167,7 +167,7 @@ export default function AdminSystemPage() {
               </Tbody>
             </Table>
           ) : (
-            <Text fontSize="xs" color="gray.400">No city memberships yet</Text>
+            <Text fontSize="xs" color="gray.400">No institution memberships yet</Text>
           )}
         </Box>
       </SimpleGrid>
@@ -208,12 +208,12 @@ export default function AdminSystemPage() {
           mb={8}
         >
           <Text fontSize="sm" fontWeight="600" color="gray.700" mb={4}>
-            Conversations by City
+            Conversations by Institution
           </Text>
           <Table size="sm" variant="simple">
             <Thead>
               <Tr>
-                <Th px={0} fontSize="10px">City</Th>
+                <Th px={0} fontSize="10px">Institution</Th>
                 <Th px={0} fontSize="10px" isNumeric>Today</Th>
                 <Th px={0} fontSize="10px" isNumeric>Total</Th>
               </Tr>
@@ -249,13 +249,13 @@ export default function AdminSystemPage() {
         />
         <StatCard
           icon={FiActivity}
-          label="Active Cities"
+          label="Active Institutions"
           value={usageStats?.cities.filter((c) => c.requestsToday > 0).length ?? 0}
           color="teal"
         />
         <StatCard
           icon={FiUsers}
-          label="Total Cities"
+          label="Total Institutions"
           value={usageStats?.cities.length ?? 0}
           color="blue"
         />
@@ -271,12 +271,12 @@ export default function AdminSystemPage() {
           mb={8}
         >
           <Text fontSize="sm" fontWeight="600" color="gray.700" mb={4}>
-            Requests by City (Today)
+            Requests by Institution (Today)
           </Text>
           <Table size="sm" variant="simple">
             <Thead bg="gray.50">
               <Tr>
-                <Th px={0} fontSize="10px" py={2}>City</Th>
+                <Th px={0} fontSize="10px" py={2}>Institution</Th>
                 <Th px={0} fontSize="10px" py={2} isNumeric>Requests</Th>
               </Tr>
             </Thead>

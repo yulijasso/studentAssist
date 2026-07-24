@@ -2,7 +2,7 @@
  * Root tRPC router — aggregates all sub-routers into the top-level appRouter.
  *
  * Sub-routers:
- *   chat        — resident chat (send mutation)
+ *   chat        — student chat (send mutation)
  *   tenants     — admin tenant CRUD
  *   departments — admin department CRUD
  *   health      — liveness ping

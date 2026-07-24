@@ -1,5 +1,5 @@
 /**
- * Admin cities page with table view, toggleable map, and create city modal.
+ * Admin institutions page with table view, toggleable map, and create institution modal.
  */
 "use client";
 
@@ -44,14 +44,14 @@ import NextLink from "next/link";
 import { FiRefreshCw, FiEdit2, FiPlus, FiMap, FiTrash2, FiSearch, FiExternalLink } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
 
-const CityMap = dynamic(() => import("@/components/CityMap"), { ssr: false });
+const InstitutionMap = dynamic(() => import("@/components/InstitutionMap"), { ssr: false });
 const LocationAutocomplete = dynamic(
   () => import("@/components/LocationAutocomplete"),
   { ssr: false },
 );
 
 export default function AdminCitiesPage() {
-  const { data: cities, isLoading } = trpc.admin.listCities.useQuery();
+  const { data: cities, isLoading } = trpc.admin.listInstitutions.useQuery();
   const triggerCrawl = trpc.admin.triggerCrawl.useMutation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [showMap, setShowMap] = useState(false);
@@ -87,7 +87,7 @@ export default function AdminCitiesPage() {
     <Box p={8}>
       <Flex justify="space-between" align="center" mb={6}>
         <Text fontSize="2xl" fontWeight="700" color="gray.800">
-          Cities
+          Institutions
         </Text>
         <HStack spacing={5}>
           <VStack spacing={0} align="center">
@@ -138,7 +138,7 @@ export default function AdminCitiesPage() {
               <Icon as={FiSearch} color="gray.400" boxSize={3} />
             </InputLeftElement>
             <Input
-              placeholder="Search cities..."
+              placeholder="Search institutions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               borderRadius="lg"
@@ -170,7 +170,7 @@ export default function AdminCitiesPage() {
             _hover={{ bg: "gray.100", color: "blue.600" }}
             onClick={onOpen}
           >
-            Add City
+            Add Institution
           </Button>
         </HStack>
       </Flex>
@@ -178,7 +178,7 @@ export default function AdminCitiesPage() {
       {/* Map (toggleable) */}
       {showMap && (
         <Box mb={6}>
-          <CityMap cities={cities ?? []} height="400px" />
+          <InstitutionMap cities={cities ?? []} height="400px" />
         </Box>
       )}
 
@@ -240,7 +240,7 @@ export default function AdminCitiesPage() {
                         _hover={{ color: "blue.500" }}
                       />
                     </Tooltip>
-                    <Tooltip label="Edit city">
+                    <Tooltip label="Edit institution">
                       <IconButton
                         as={NextLink}
                         href={`/admin/cities/${city.id}`}
@@ -262,7 +262,7 @@ export default function AdminCitiesPage() {
                         }
                       />
                     </Tooltip>
-                    <Tooltip label="Delete city">
+                    <Tooltip label="Delete institution">
                       <IconButton
                         aria-label="Delete"
                         icon={<FiTrash2 />}
@@ -283,8 +283,8 @@ export default function AdminCitiesPage() {
           <Flex p={8} justify="center">
             <Text color="gray.500" fontSize="sm">
               {search || statusFilter !== "all"
-                ? "No cities match your filters"
-                : "No cities yet. Click \"Add City\" to get started."}
+                ? "No institutions match your filters"
+                : "No institutions yet. Click \"Add Institution\" to get started."}
             </Text>
           </Flex>
         )}
@@ -323,8 +323,8 @@ function CreateCityModal({
 
   const createCity = trpc.tenants.create.useMutation({
     onSuccess: () => {
-      toast({ title: "City created", status: "success", duration: 3000 });
-      utils.admin.listCities.invalidate();
+      toast({ title: "Institution created", status: "success", duration: 3000 });
+      utils.admin.listInstitutions.invalidate();
       setName("");
       setSlug("");
       setDomain("");
@@ -376,10 +376,10 @@ function CreateCityModal({
             </Flex>
             <Box>
               <Text fontSize="sm" fontWeight="600" color="gray.800">
-                Add New City
+                Add New Institution
               </Text>
               <Text fontSize="xs" color="gray.500">
-                Register a new city or organization
+                Register a new institution or organization
               </Text>
             </Box>
           </Flex>
@@ -387,21 +387,21 @@ function CreateCityModal({
         <ModalCloseButton top={3} right={3} size="sm" color="gray.400" _hover={{ color: "gray.600", bg: "transparent" }} />
 
         <ModalBody px={6} py={5}>
-          {/* City Details */}
+          {/* Institution Details */}
           <Box border="1px solid" borderColor="gray.100" borderRadius="lg" overflow="hidden" mb={4}>
             <Flex px={4} py={2.5} bg="gray.50" borderBottom="1px solid" borderColor="gray.100">
               <Text fontSize="11px" fontWeight="600" color="gray.500" textTransform="uppercase" letterSpacing="wider">
-                City Details
+                Institution Details
               </Text>
             </Flex>
             <Box px={4} py={3}>
               <FormControl mb={3}>
-                <FormLabel fontSize="xs" color="gray.500" mb={1}>City / Organization Name</FormLabel>
+                <FormLabel fontSize="xs" color="gray.500" mb={1}>Institution / Organization Name</FormLabel>
                 <Input
                   size="sm"
                   value={name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="e.g. City of Edinburg"
+                  placeholder="e.g. University of Texas Rio Grande Valley"
                   borderRadius="md"
                   _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px #3182ce" }}
                 />
@@ -413,7 +413,7 @@ function CreateCityModal({
                     size="sm"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    placeholder="city-of-edinburg"
+                    placeholder="utrgv"
                     fontFamily="mono"
                     borderRadius="md"
                     bg={slug ? "gray.50" : "white"}
@@ -426,7 +426,7 @@ function CreateCityModal({
                     size="sm"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
-                    placeholder="cityofedinburg.com"
+                    placeholder="utrgv.edu"
                     borderRadius="md"
                     _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px #3182ce" }}
                   />
@@ -476,7 +476,7 @@ function CreateCityModal({
               })
             }
           >
-            Create City
+            Create Institution
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -500,10 +500,10 @@ function DeleteCityModal({
   const toast = useToast();
   const utils = trpc.useUtils();
 
-  const deleteCity = trpc.admin.deleteCity.useMutation({
+  const deleteInstitution = trpc.admin.deleteInstitution.useMutation({
     onSuccess: () => {
-      utils.admin.listCities.invalidate();
-      toast({ title: "City deleted permanently", status: "info", duration: 2000 });
+      utils.admin.listInstitutions.invalidate();
+      toast({ title: "Institution deleted permanently", status: "info", duration: 2000 });
       onClose();
     },
     onError: (err) => {
@@ -535,19 +535,19 @@ function DeleteCityModal({
                 Delete {cityName}?
               </Text>
               <Text fontSize="xs" color="gray.500">
-                This will permanently remove the city and all its departments, conversations, messages, and member assignments.
+                This will permanently remove the institution and all its departments, conversations, messages, and member assignments.
               </Text>
             </Box>
           </Flex>
 
           <FormControl>
             <FormLabel fontSize="xs" color="gray.500" mb={1} textAlign="left">
-              Type &quot;Delete city&quot; to confirm
+              Type &quot;Delete institution&quot; to confirm
             </FormLabel>
             <Input
               size="sm"
               borderRadius="md"
-              placeholder="Delete city"
+              placeholder="Delete institution"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               autoFocus
@@ -565,11 +565,11 @@ function DeleteCityModal({
             size="sm"
             borderRadius="full"
             leftIcon={<FiTrash2 />}
-            isLoading={deleteCity.isPending}
-            isDisabled={confirmText !== "Delete city"}
-            onClick={() => deleteCity.mutate({ tenantId: cityId })}
+            isLoading={deleteInstitution.isPending}
+            isDisabled={confirmText !== "Delete institution"}
+            onClick={() => deleteInstitution.mutate({ tenantId: cityId })}
           >
-            Delete City
+            Delete Institution
           </Button>
         </ModalFooter>
       </ModalContent>

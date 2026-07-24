@@ -59,7 +59,7 @@ export const adminRouter = router({
   }),
 
   // ── Cities ─────────────────────────────────────────────────────────────────
-  listCities: techAdminProcedure.query(async ({ ctx }) => {
+  listInstitutions: techAdminProcedure.query(async ({ ctx }) => {
     const cities = await ctx.db
       .select({
         id: tenants.id,
@@ -95,7 +95,7 @@ export const adminRouter = router({
     }));
   }),
 
-  updateCity: techAdminProcedure
+  updateInstitution: techAdminProcedure
     .input(
       z.object({
         id: z.string().uuid(),
@@ -126,7 +126,7 @@ export const adminRouter = router({
     }),
 
   /** Permanently deletes a city/tenant and all associated data (cascades via FK). */
-  deleteCity: techAdminProcedure
+  deleteInstitution: techAdminProcedure
     .input(z.object({ tenantId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db

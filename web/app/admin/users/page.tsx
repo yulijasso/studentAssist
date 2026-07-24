@@ -1,7 +1,7 @@
 /**
  * Tech Admin — Active Directory.
  *
- * Lists all users with inline editing for name, email, role, city,
+ * Lists all users with inline editing for name, email, role, institution,
  * department, and active status. Supports search and user management.
  */
 "use client";
@@ -80,7 +80,7 @@ type UserRow = {
 export default function AdminUsersPage() {
   const { data: users, isLoading } = trpc.admin.listUsers.useQuery();
   const { data: roles } = trpc.admin.listRoles.useQuery();
-  const { data: cities } = trpc.admin.listCities.useQuery();
+  const { data: cities } = trpc.admin.listInstitutions.useQuery();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -213,7 +213,7 @@ export default function AdminUsersPage() {
           >
             <option value="all">All Roles</option>
             <option value="tech_admin">Tech Admin</option>
-            <option value="city_admin">City Admin</option>
+            <option value="city_admin">Institution Admin</option>
             <option value="supervisor">Supervisor</option>
             <option value="staff">Staff</option>
             <option value="member">Member</option>
@@ -272,7 +272,7 @@ export default function AdminUsersPage() {
                 <Th fontSize="10px" py={3}>User</Th>
                 <Th fontSize="10px" py={3}>Email</Th>
                 <Th fontSize="10px" py={3}>Role</Th>
-                <Th fontSize="10px" py={3}>City</Th>
+                <Th fontSize="10px" py={3}>Institution</Th>
                 <Th fontSize="10px" py={3}>Department</Th>
                 <Th fontSize="10px" py={3}>Status</Th>
                 <Th fontSize="10px" py={3}>Joined</Th>
@@ -412,13 +412,13 @@ function EditUserModal({
   const [tenantId, setTenantId] = useState(activeMembership?.tenantId ?? "");
   const [deptId, setDeptId] = useState(activeMembership?.departmentId ?? "");
 
-  // Fetch departments for the user's current city
+  // Fetch departments for the user's current institution
   const { data: memberDepts } = trpc.departments.list.useQuery(
     { tenantId: activeMembership?.tenantId! },
     { enabled: !!activeMembership?.tenantId },
   );
 
-  // Fetch departments for the selected invite city
+  // Fetch departments for the selected invite institution
   const { data: inviteDepts } = trpc.departments.list.useQuery(
     { tenantId: inviteTenantId },
     { enabled: !!inviteTenantId },
@@ -626,7 +626,7 @@ function EditUserModal({
                         </Select>
                       </FormControl>
                       <FormControl>
-                        <FormLabel fontSize="xs" color="gray.500" mb={1}>City</FormLabel>
+                        <FormLabel fontSize="xs" color="gray.500" mb={1}>Institution</FormLabel>
                         <Input
                           size="sm"
                           value={activeMembership.city ?? (activeMembership.role === "tech_admin" ? "Global" : "—")}
@@ -707,10 +707,10 @@ function EditUserModal({
                         </Select>
                       </FormControl>
                       <FormControl>
-                        <FormLabel fontSize="xs" color="gray.500" mb={1}>City</FormLabel>
+                        <FormLabel fontSize="xs" color="gray.500" mb={1}>Institution</FormLabel>
                         <Select
                           size="sm"
-                          placeholder="Global (no city)"
+                          placeholder="Global (no institution)"
                           value={inviteTenantId}
                           onChange={(e) => { setInviteTenantId(e.target.value); setInviteDeptId(""); }}
                           borderRadius="md"
@@ -875,7 +875,7 @@ function EditUserModal({
 
         <ModalFooter borderTop="1px solid" borderColor="gray.100" px={6} py={3} flexDir="column" gap={2}>
           <Text fontSize="10px" color="gray.400" textAlign="center">
-            To change a user's email or city, create a new invitation via the{" "}
+            To change a user's email or institution, create a new invitation via the{" "}
             <ChakraLink as={NextLink} href="/admin/invitations" color="blue.400" fontWeight="500">
               Invitations
             </ChakraLink>{" "}

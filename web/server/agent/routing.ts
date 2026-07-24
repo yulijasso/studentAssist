@@ -195,7 +195,7 @@ export async function detectDepartments(
     .map((d) => `- [id: ${d.id}] ${d.name}: ${(d.keywords ?? "").split(",").map((k) => k.trim()).filter(Boolean).join(", ")}`)
     .join("\n");
 
-  const systemPrompt = `You are a department routing classifier for a civic chatbot.
+  const systemPrompt = `You are a department routing classifier for a university chatbot.
 Given a conversation, identify which city departments (if any) are relevant to the CURRENT user message or the topic being actively discussed.
 
 Rules:
@@ -297,9 +297,9 @@ export async function detectEscalation(
     language: z.enum(["en", "es", "mixed"]),
   });
 
-  const systemPrompt = `You are an escalation classifier for a civic chatbot.
+  const systemPrompt = `You are an escalation classifier for a university chatbot.
 Determine whether this conversation requires a human staff member to follow up
-with the resident directly (e.g. phone call or email from the city).
+with the student directly (e.g. phone call or email from the institution).
 
 Escalate ONLY if BOTH of these are true:
 - The user has explicitly expressed that their issue is NOT resolved or they are
@@ -316,7 +316,7 @@ Do NOT escalate for:
 - Greetings, clarifying questions, off-topic messages, or successful Q&A exchanges.
 - Cases where the assistant provided step-by-step instructions or resolved the query.
 
-Return shouldEscalate: true only when there is clear evidence the resident needs
+Return shouldEscalate: true only when there is clear evidence the student needs
 a human to follow up because the AI could not resolve their concern.
 When in doubt, return false.
 
@@ -398,8 +398,8 @@ export async function detectDisclaimer(
     reason: z.string(),
   });
 
-  const systemPrompt = `You are a content safety classifier for a civic AI chatbot.
-Determine whether the assistant's response actually provides specific guidance or information on a sensitive topic where a resident could be harmed — legally, financially, physically, or health-wise — if they acted on it.
+  const systemPrompt = `You are a content safety classifier for a university AI chatbot.
+Determine whether the assistant's response actually provides specific guidance or information on a sensitive topic where a student could be harmed — legally, financially, physically, or health-wise — if they acted on it.
 
 ALWAYS show a disclaimer when the user's message describes or implies an active emergency or immediate physical danger — regardless of what the assistant said. Examples: fire, gas leak, flooding, building collapse, medical emergency, structural danger. These always require a disclaimer.
 
