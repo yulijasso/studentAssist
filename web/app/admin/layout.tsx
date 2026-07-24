@@ -23,7 +23,7 @@ import { TopNav, TopNavLink, type NavItem } from "@/components/TopNav";
 
 const NAV_ITEMS = [
   { label: "Overview", href: "/admin", icon: FiHome, exact: true },
-  { label: "Cities", href: "/admin/cities", icon: FiMap },
+  { label: "Institutions", href: "/admin/cities", icon: FiMap },
   { label: "Invitations", href: "/admin/invitations", icon: FiMail },
   { label: "Users", href: "/admin/users", icon: FiUsers },
   { label: "System", href: "/admin/system", icon: FiActivity },
@@ -53,7 +53,7 @@ export default function AdminLayout({
 
   // Match the institution branding: use the first tenant's widget color as the
   // nav accent (same tenant the "Dashboard" button routes to).
-  const { data: cities } = trpc.admin.listCities.useQuery(undefined, {
+  const { data: cities } = trpc.admin.listInstitutions.useQuery(undefined, {
     enabled: isLoaded && isSignedIn === true,
   });
   const accentColor = cities?.[0]?.brandColor ?? null;

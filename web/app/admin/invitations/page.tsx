@@ -49,7 +49,7 @@ const ROLE_COLORS: Record<string, string> = {
 export default function AdminInvitationsPage() {
   const { data: invitations, isLoading } = trpc.admin.listInvitations.useQuery();
   const { data: roles } = trpc.admin.listRoles.useQuery();
-  const { data: cities } = trpc.admin.listCities.useQuery();
+  const { data: cities } = trpc.admin.listInstitutions.useQuery();
   const utils = trpc.useUtils();
   const toast = useToast();
   const [search, setSearch] = useState("");
@@ -162,7 +162,7 @@ export default function AdminInvitationsPage() {
           >
             <option value="all">All Roles</option>
             <option value="tech_admin">Tech Admin</option>
-            <option value="city_admin">City Admin</option>
+            <option value="city_admin">Institution Admin</option>
             <option value="supervisor">Supervisor</option>
             <option value="staff">Staff</option>
             <option value="member">Member</option>
@@ -247,7 +247,7 @@ export default function AdminInvitationsPage() {
             <Thead bg="gray.50">
               <Tr>
                 <Th fontSize="10px" py={3}>Email</Th>
-                <Th fontSize="10px" py={3}>City</Th>
+                <Th fontSize="10px" py={3}>Institution</Th>
                 <Th fontSize="10px" py={3}>Department</Th>
                 <Th fontSize="10px" py={3}>Role</Th>
                 <Th fontSize="10px" py={3}>Status</Th>
@@ -499,12 +499,12 @@ function SendInvitationModal({
                     </Select>
                   </FormControl>
                   <FormControl>
-                    <FormLabel fontSize="xs" color="gray.500" mb={1}>City</FormLabel>
+                    <FormLabel fontSize="xs" color="gray.500" mb={1}>Institution</FormLabel>
                     <Select
                       size="sm"
                       value={tenantId}
                       onChange={(e) => { setTenantId(e.target.value); setDeptId(""); }}
-                      placeholder="Global (no city)"
+                      placeholder="Global (no institution)"
                       borderRadius="md"
                     >
                       {cities.map((c) => (

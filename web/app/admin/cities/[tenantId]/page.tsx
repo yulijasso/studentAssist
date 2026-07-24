@@ -67,7 +67,7 @@ export default function AdminCityDetailPage() {
   const tenantId = params.tenantId as string;
 
   const { data: cities, isLoading: citiesLoading } =
-    trpc.admin.listCities.useQuery();
+    trpc.admin.listInstitutions.useQuery();
   const { data: members, isLoading: membersLoading } =
     trpc.admin.listMembers.useQuery({ tenantId });
   const { data: depts, isLoading: deptsLoading } =
@@ -89,7 +89,7 @@ export default function AdminCityDetailPage() {
   if (!city) {
     return (
       <Box p={8}>
-        <Text color="red.500">City not found</Text>
+        <Text color="red.500">Institution not found</Text>
       </Box>
     );
   }
@@ -305,7 +305,7 @@ export default function AdminCityDetailPage() {
 /**
  * Editable General settings tab for a city.
  *
- * @param city - The city data from listCities query.
+ * @param city - The city data from listInstitutions query.
  * @param tenantId - The tenant UUID.
  */
 function GeneralTab({
@@ -333,10 +333,10 @@ function GeneralTab({
   const toast = useToast();
   const utils = trpc.useUtils();
 
-  const updateCity = trpc.admin.updateCity.useMutation({
+  const updateInstitution = trpc.admin.updateInstitution.useMutation({
     onSuccess: () => {
-      toast({ title: "City updated", status: "success", duration: 3000 });
-      utils.admin.listCities.invalidate();
+      toast({ title: "Institution updated", status: "success", duration: 3000 });
+      utils.admin.listInstitutions.invalidate();
     },
     onError: (err) => {
       toast({
@@ -360,7 +360,7 @@ function GeneralTab({
    * Saves the edited general settings to the backend.
    */
   function handleSave() {
-    updateCity.mutate({
+    updateInstitution.mutate({
       id: tenantId,
       name: name || undefined,
       websiteDomain: domain || undefined,
@@ -383,7 +383,7 @@ function GeneralTab({
       <VStack align="stretch" spacing={5}>
         <FormControl>
           <FormLabel fontSize="sm" color="gray.600">
-            City Name
+            Institution Name
           </FormLabel>
           <Input
             size="sm"
@@ -400,7 +400,7 @@ function GeneralTab({
             size="sm"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
-            placeholder="e.g. cityname.gov"
+            placeholder="e.g. utrgv.edu"
           />
         </FormControl>
 
@@ -444,7 +444,7 @@ function GeneralTab({
             leftIcon={<FiSave />}
             colorScheme="blue"
             size="sm"
-            isLoading={updateCity.isPending}
+            isLoading={updateInstitution.isPending}
             isDisabled={!hasChanges}
             onClick={handleSave}
           >
@@ -454,7 +454,7 @@ function GeneralTab({
       </VStack>
     </Box>
 
-    {/* Delete City */}
+    {/* Delete Institution */}
     <Box
       bg="white"
       border="1px solid"
@@ -475,7 +475,7 @@ function GeneralTab({
 }
 
 /**
- * Delete city section with confirmation input.
+ * Delete institution section with confirmation input.
  */
 function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName: string }) {
   const [showDeleteInput, setShowDeleteInput] = useState(false);
@@ -484,9 +484,9 @@ function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName:
   const router = useRouter();
   const utils = trpc.useUtils();
 
-  const deleteCity = trpc.admin.deleteCity.useMutation({
+  const deleteInstitution = trpc.admin.deleteInstitution.useMutation({
     onSuccess: () => {
-      utils.admin.listCities.invalidate();
+      utils.admin.listInstitutions.invalidate();
       toast({ title: "City deleted permanently", status: "info", duration: 2000 });
       router.push("/admin/cities");
     },
@@ -502,7 +502,7 @@ function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName:
           <Box w="8px" h="8px" borderRadius="full" bg="red.400" />
           <Box>
             <Text fontSize="xs" fontWeight="500" color="gray.700">
-              Delete City
+              Delete Institution
             </Text>
             <Text fontSize="10px" color="gray.400">
               Permanently remove {cityName} and all associated data
@@ -515,13 +515,13 @@ function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName:
           colorScheme="red"
           variant={showDeleteInput ? "solid" : "outline"}
           borderRadius="full"
-          isLoading={deleteCity.isPending}
-          isDisabled={showDeleteInput && deleteConfirm !== "Delete city"}
+          isLoading={deleteInstitution.isPending}
+          isDisabled={showDeleteInput && deleteConfirm !== "Delete institution"}
           onClick={() => {
             if (!showDeleteInput) {
               setShowDeleteInput(true);
             } else {
-              deleteCity.mutate({ tenantId });
+              deleteInstitution.mutate({ tenantId });
             }
           }}
         >
@@ -533,7 +533,7 @@ function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName:
           <Input
             size="sm"
             borderRadius="md"
-            placeholder="Type 'Delete city' to confirm"
+            placeholder="Type 'Delete institution' to confirm"
             value={deleteConfirm}
             onChange={(e) => setDeleteConfirm(e.target.value)}
             bg="gray.50"

@@ -1,5 +1,5 @@
 /**
- * Tech Admin dashboard overview — high-level summary of cities, users,
+ * Tech Admin dashboard overview — high-level summary of institutions, users,
  * invitations, and platform activity in a clean card-based layout.
  */
 "use client";
@@ -44,7 +44,7 @@ import { trpc } from "@/lib/trpc";
 export default function AdminOverviewPage() {
   const { data: overview, isLoading: overviewLoading } = trpc.admin.overview.useQuery();
   const { data: userStats, isLoading: userStatsLoading } = trpc.admin.userStats.useQuery();
-  const { data: cities } = trpc.admin.listCities.useQuery();
+  const { data: cities } = trpc.admin.listInstitutions.useQuery();
   const { data: invitations } = trpc.admin.listInvitations.useQuery();
   const { data: usage } = trpc.admin.platformUsage.useQuery();
   const { data: activity } = trpc.admin.recentActivity.useQuery();
@@ -149,7 +149,7 @@ export default function AdminOverviewPage() {
       {/* Hero Metrics */}
       <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={8}>
         <HeroCard
-          label="Active Cities"
+          label="Active Institutions"
           value={activeCities}
           sub={`${inactiveCities} inactive`}
           color="blue"
@@ -181,7 +181,7 @@ export default function AdminOverviewPage() {
       {/* Two-Column Layout */}
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={5} mb={8}>
         {/* Cities Summary */}
-        <SectionCard title="Cities" href="/admin/cities" icon={FiMap} iconColor="blue.400">
+        <SectionCard title="Institutions" href="/admin/cities" icon={FiMap} iconColor="blue.400">
           {cities && cities.length > 0 ? (
             <VStack align="stretch" spacing={0}>
               {cities.slice(0, 5).map((city) => (
@@ -228,7 +228,7 @@ export default function AdminOverviewPage() {
               )}
             </VStack>
           ) : (
-            <EmptyState text="No cities registered" />
+            <EmptyState text="No institutions registered" />
           )}
         </SectionCard>
 
@@ -325,7 +325,7 @@ export default function AdminOverviewPage() {
           {usage?.perCity && usage.perCity.length > 0 && (
             <Box>
               <Text fontSize="11px" color="gray.400" mb={2} fontWeight="500">
-                Conversations by City
+                Conversations by Institution
               </Text>
               <VStack align="stretch" spacing={1.5}>
                 {usage.perCity.slice(0, 4).map((c) => {

@@ -3,7 +3,7 @@
  *
  * - Users with a tenant membership go to their own tenant.
  * - Tech admins (no tenant-scoped membership) fall back to the first
- *   institution in the system, so "City Dashboard" from the admin area works.
+ *   institution in the system, so the "Dashboard" link from the admin area works.
  * - Otherwise, back to home.
  */
 "use client";
@@ -26,14 +26,14 @@ export default function DashboardIndexPage() {
   const tenantMembership = memberships?.find((m) => m.tenantSlug);
 
   // Tech admins have only a global membership (no tenantSlug); fall back to the
-  // first institution. listCities is tech-admin-only, so only query when needed.
+  // first institution. listInstitutions is tech-admin-only, so only query when needed.
   const needsCities =
     isLoaded && !!isSignedIn && !isLoading && !!memberships && !tenantMembership;
   const {
     data: cities,
     isLoading: citiesLoading,
     isError: citiesError,
-  } = trpc.admin.listCities.useQuery(undefined, {
+  } = trpc.admin.listInstitutions.useQuery(undefined, {
     enabled: needsCities,
     retry: false,
   });

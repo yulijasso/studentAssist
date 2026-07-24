@@ -22,7 +22,7 @@ interface City {
   longitude: number | null;
 }
 
-interface CityMapProps {
+interface InstitutionMapProps {
   /** List of cities to display on the map. */
   cities: City[];
   /** Map container height. Defaults to "450px". */
@@ -138,7 +138,7 @@ function injectMapStyles(theme: "dark" | "light") {
  * @param props.cities - Array of city objects with optional lat/lng.
  * @param props.height - CSS height for the map container.
  */
-export default function CityMap({ cities, height = "450px" }: CityMapProps) {
+export default function InstitutionMap({ cities, height = "450px" }: InstitutionMapProps) {
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [MapComponents, setMapComponents] = useState<{
     MapContainer: typeof import("react-leaflet").MapContainer;
