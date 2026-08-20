@@ -277,8 +277,8 @@ export default function AdminCityDetailPage() {
               {!membersLoading && members?.length === 0 && (
                 <Flex p={6} justify="center">
                   <Text color="gray.500" fontSize="sm">
-                    No members yet. Send an invitation from the Invitations
-                    page.
+                    No members yet. Assign a role from the Users page, or the
+                    institution&apos;s admin can invite members from their dashboard.
                   </Text>
                 </Flex>
               )}

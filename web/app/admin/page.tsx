@@ -15,12 +15,6 @@ import {
   VStack,
   Link as ChakraLink,
   Badge,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Progress,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
@@ -28,15 +22,10 @@ import {
   FiMap,
   FiMessageSquare,
   FiUsers,
-  FiUserPlus,
   FiMail,
-  FiUserCheck,
-  FiZap,
   FiActivity,
+  FiHeart,
   FiArrowRight,
-  FiTrendingUp,
-  FiClock,
-  FiCheckCircle,
   FiAlertCircle,
 } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
@@ -47,8 +36,8 @@ export default function AdminOverviewPage() {
   const { data: cities } = trpc.admin.listInstitutions.useQuery();
   const { data: invitations } = trpc.admin.listInvitations.useQuery();
   const { data: usage } = trpc.admin.platformUsage.useQuery();
-  const { data: activity } = trpc.admin.recentActivity.useQuery();
   const { data: allUsers } = trpc.admin.listUsers.useQuery();
+  const { data: health } = trpc.admin.systemHealth.useQuery();
 
   if (overviewLoading || userStatsLoading) {
     return (
@@ -70,6 +59,13 @@ export default function AdminOverviewPage() {
 
   // Unassigned users (signed in but no membership)
   const unassignedUsers = (allUsers ?? []).filter((u) => u.memberships.length === 0);
+
+  // System health summary (presence-only; deep checks live on the Health page)
+  const healthIntegrations = health?.integrations ?? [];
+  const healthyIntegrations = healthIntegrations.filter((i) => i.status === "ok").length;
+  const requiredUnhealthy = healthIntegrations.filter(
+    (i) => i.required && i.status !== "ok",
+  ).length;
 
   return (
     <Box p={8} maxW="1200px">
@@ -103,13 +99,13 @@ export default function AdminOverviewPage() {
             </HStack>
             <ChakraLink
               as={NextLink}
-              href="/admin/invitations"
+              href="/admin/users"
               fontSize="xs"
               color="orange.600"
               fontWeight="500"
               _hover={{ textDecoration: "underline" }}
             >
-              Send invitations
+              Assign roles
             </ChakraLink>
           </Flex>
           <VStack align="stretch" spacing={0}>
@@ -290,27 +286,6 @@ export default function AdminOverviewPage() {
           </VStack>
         </SectionCard>
 
-        {/* Invitations Summary */}
-        <SectionCard title="Invitations" href="/admin/invitations" icon={FiMail} iconColor="gray.400">
-          <SimpleGrid columns={3} spacing={3} mb={3}>
-            <MiniStat label="Pending" value={pendingInvites} color="yellow.500" />
-            <MiniStat label="Accepted" value={acceptedInvites} color="green.500" />
-            <MiniStat
-              label="Expired"
-              value={(invitations?.length ?? 0) - pendingInvites - acceptedInvites}
-              color="red.400"
-            />
-          </SimpleGrid>
-          <Box bg="gray.50" borderRadius="md" p={3}>
-            <HStack justify="space-between">
-              <Text fontSize="12px" color="gray.500">Total Sent</Text>
-              <Text fontSize="13px" fontWeight="600" color="gray.700">
-                {invitations?.length ?? 0}
-              </Text>
-            </HStack>
-          </Box>
-        </SectionCard>
-
         {/* Platform Activity */}
         <SectionCard title="Platform Activity" href="/admin/system" icon={FiActivity} iconColor="purple.400">
           <SimpleGrid columns={3} spacing={3} mb={3}>
@@ -355,92 +330,80 @@ export default function AdminOverviewPage() {
             </Box>
           )}
         </SectionCard>
-      </SimpleGrid>
 
-      {/* Recent Signups */}
-      {activity && activity.length > 0 && (
-        <Box
-          bg="white"
-          border="1px solid"
-          borderColor="gray.200"
-          borderRadius="lg"
-          overflow="hidden"
-        >
-          <Flex
-            px={5}
-            py={3}
-            borderBottom="1px solid"
-            borderColor="gray.100"
-            justify="space-between"
-            align="center"
-          >
-            <HStack spacing={2}>
-              <Icon as={FiClock} boxSize={3.5} color="orange.400" />
-              <Text fontSize="sm" fontWeight="600" color="gray.700">
-                Recent Signups
-              </Text>
-            </HStack>
-            <ChakraLink
-              as={NextLink}
-              href="/admin/users"
-              fontSize="xs"
-              color="blue.500"
-              _hover={{ textDecoration: "underline" }}
-            >
-              View all
-            </ChakraLink>
-          </Flex>
-          <Table size="sm" variant="simple">
-            <Thead bg="gray.50">
-              <Tr>
-                <Th fontSize="10px" py={2}>User</Th>
-                <Th fontSize="10px" py={2}>Role</Th>
-                <Th fontSize="10px" py={2}>Joined</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {activity.slice(0, 5).map((u) => (
-                <Tr key={u.id}>
-                  <Td py={2}>
-                    <VStack align="start" spacing={0}>
-                      <Text fontSize="12px" fontWeight="500" color="gray.800">
-                        {u.name ?? "—"}
-                      </Text>
-                      <Text fontSize="10px" color="gray.400">
-                        {u.email}
-                      </Text>
-                    </VStack>
-                  </Td>
-                  <Td py={2}>
-                    {u.memberships.length > 0 ? (
-                      <HStack spacing={1} flexWrap="wrap">
-                        {u.memberships.map((m, i) => (
-                          <Badge
-                            key={i}
-                            colorScheme={ROLE_COLOR_SCHEME[m.role] ?? "gray"}
-                            fontSize="10px"
-                          >
-                            {m.role}{m.city ? ` · ${m.city}` : ""}
-                          </Badge>
-                        ))}
-                      </HStack>
-                    ) : (
-                      <Badge colorScheme="orange" fontSize="10px">
-                        Unassigned
-                      </Badge>
-                    )}
-                  </Td>
-                  <Td py={2}>
-                    <Text fontSize="11px" color="gray.500">
-                      {formatTimeAgo(u.createdAt)}
+        {/* System Health */}
+        <SectionCard title="System Health" href="/admin/health" icon={FiHeart} iconColor="pink.400">
+          {health ? (
+            <VStack align="stretch" spacing={2.5}>
+              {/* Core services */}
+              {[
+                { label: "Database", ok: health.db },
+                { label: "Cache (Redis)", ok: health.redis },
+              ].map((s) => (
+                <Flex key={s.label} justify="space-between" align="center">
+                  <HStack spacing={2.5}>
+                    <Box
+                      w="7px"
+                      h="7px"
+                      borderRadius="full"
+                      bg={s.ok ? "green.400" : "red.300"}
+                    />
+                    <Text fontSize="13px" color="gray.700" fontWeight="500">
+                      {s.label}
                     </Text>
-                  </Td>
-                </Tr>
+                  </HStack>
+                  <Badge
+                    fontSize="10px"
+                    colorScheme={s.ok ? "green" : "red"}
+                    variant="subtle"
+                    borderRadius="full"
+                    px={2}
+                  >
+                    {s.ok ? "Online" : "Down"}
+                  </Badge>
+                </Flex>
               ))}
-            </Tbody>
-          </Table>
-        </Box>
-      )}
+
+              {/* Integrations summary */}
+              <Flex
+                justify="space-between"
+                align="center"
+                pt={2}
+                borderTop="1px solid"
+                borderColor="gray.50"
+              >
+                <Text fontSize="12px" color="gray.500">
+                  Integrations
+                </Text>
+                <Text fontSize="12px" fontWeight="600" color="gray.700">
+                  {healthyIntegrations}/{healthIntegrations.length} configured
+                </Text>
+              </Flex>
+
+              {requiredUnhealthy > 0 && (
+                <Flex
+                  align="center"
+                  gap={2}
+                  bg="red.50"
+                  border="1px solid"
+                  borderColor="red.100"
+                  borderRadius="md"
+                  px={3}
+                  py={2}
+                >
+                  <Icon as={FiAlertCircle} boxSize={3.5} color="red.500" />
+                  <Text fontSize="12px" color="red.700">
+                    {requiredUnhealthy} required integration
+                    {requiredUnhealthy !== 1 ? "s" : ""} need attention
+                  </Text>
+                </Flex>
+              )}
+            </VStack>
+          ) : (
+            <EmptyState text="Checking status…" />
+          )}
+        </SectionCard>
+      </SimpleGrid>
     </Box>
   );
 }

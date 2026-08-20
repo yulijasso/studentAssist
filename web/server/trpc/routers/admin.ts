@@ -22,6 +22,20 @@ import { getUserByClerkId } from "@/server/services/user_service";
 import { getCurrentUsage } from "@/server/services/quota_service";
 import { PROTECTED_ADMINS } from "../guards";
 
+/** Outcome of an integration check. `ok` from a presence-only check is not
+ *  verified; a live probe additionally distinguishes invalid/unreachable. */
+type IntegrationStatus = "ok" | "invalid" | "unreachable" | "not_configured" | "unknown";
+
+interface Integration {
+  key: string;
+  label: string;
+  required: boolean;
+  status: IntegrationStatus;
+  /** true when `status` came from a live credential probe, not just presence. */
+  verified: boolean;
+  detail?: string;
+}
+
 export const adminRouter = router({
   // ── Overview ───────────────────────────────────────────────────────────────
   overview: techAdminProcedure.query(async ({ ctx }) => {
@@ -428,28 +442,112 @@ export const adminRouter = router({
     }),
 
   // ── System Health ──────────────────────────────────────────────────────────
-  systemHealth: techAdminProcedure.query(async ({ ctx }) => {
-    let dbOk = false;
-    let redisOk = false;
-    try {
-      await ctx.db.execute(sql`SELECT 1`);
-      dbOk = true;
-    } catch {}
-    try {
-      await ctx.redis.ping();
-      redisOk = true;
-    } catch {}
+  systemHealth: techAdminProcedure
+    .input(z.object({ deep: z.boolean().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      // `deep` runs live credential probes (LLM /models, SendGrid /scopes).
+      // Default is a fast presence-only check so the admin auth-gate and
+      // auto-refresh stay snappy and don't hammer external APIs.
+      const deep = input?.deep ?? false;
 
-    const envKeys = {
-      GROQ_API_KEY: !!process.env.GROQ_API_KEY,
-      TAVILY_API_KEY: !!process.env.TAVILY_API_KEY,
-      ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
-      RESEND_API_KEY: !!process.env.RESEND_API_KEY,
-      CLERK_SECRET_KEY: !!process.env.CLERK_SECRET_KEY,
-    };
+      // Core services — always a real, local liveness check.
+      let dbOk = false;
+      let redisOk = false;
+      try {
+        await ctx.db.execute(sql`SELECT 1`);
+        dbOk = true;
+      } catch {}
+      try {
+        await ctx.redis.ping();
+        redisOk = true;
+      } catch {}
 
-    return { db: dbOk, redis: redisOk, envKeys };
-  }),
+      // A value counts as present only if it's not an obvious placeholder stub
+      // (e.g. "gsk_", "tvly-", "sk-or-"). Real API keys are long.
+      const present = (value: string | undefined, minLen = 12) =>
+        !!value && value.trim().length >= minLen;
+
+      // Hit an endpoint and classify the credential outcome.
+      const probe = async (
+        url: string,
+        headers: Record<string, string>,
+      ): Promise<IntegrationStatus> => {
+        try {
+          const res = await fetch(url, {
+            headers,
+            signal: AbortSignal.timeout(3000),
+          });
+          if (res.ok) return "ok";
+          if (res.status === 401 || res.status === 403) return "invalid";
+          return "unreachable";
+        } catch {
+          return "unreachable";
+        }
+      };
+
+      // ── LLM — provider-agnostic. No provider is hardcoded into the check:
+      //    the key is derived as <PROVIDER>_API_KEY and the base URL comes from
+      //    LLM_BASE_URL or a known-provider lookup. New providers work as soon
+      //    as those env vars are set — no change here required.
+      const providerId = (process.env.LLM_PROVIDER ?? "").toLowerCase().trim();
+      const KNOWN_BASE_URLS: Record<string, string> = {
+        groq: "https://api.groq.com/openai/v1",
+        openrouter: "https://openrouter.ai/api/v1",
+        openai: "https://api.openai.com/v1",
+      };
+      const llmKey = process.env[`${providerId.toUpperCase()}_API_KEY`];
+      const llmBaseURL = process.env.LLM_BASE_URL || KNOWN_BASE_URLS[providerId];
+
+      let llm: Integration;
+      if (!providerId) {
+        llm = { key: "llm", label: "LLM — not set", required: true, status: "unknown", verified: false, detail: "LLM_PROVIDER is empty" };
+      } else if (!present(llmKey)) {
+        llm = { key: "llm", label: `LLM — ${providerId}`, required: true, status: "not_configured", verified: false, detail: `${providerId.toUpperCase()}_API_KEY missing` };
+      } else if (deep && llmBaseURL) {
+        const status = await probe(`${llmBaseURL}/models`, { Authorization: `Bearer ${llmKey}` });
+        llm = { key: "llm", label: `LLM — ${providerId}`, required: true, status, verified: true };
+      } else {
+        llm = { key: "llm", label: `LLM — ${providerId}`, required: true, status: "ok", verified: false, detail: deep ? "no base URL to verify" : undefined };
+      }
+
+      // ── Email — SendGrid. Verifiable via /v3/scopes (no send).
+      const sendgridKey = process.env.SENDGRID_API_KEY;
+      const emailPresent = present(sendgridKey) && !!process.env.SENDGRID_FROM_EMAIL;
+      let email: Integration;
+      if (!emailPresent) {
+        email = { key: "email", label: "Email — SendGrid", required: false, status: "not_configured", verified: false, detail: present(sendgridKey) ? "SENDGRID_FROM_EMAIL missing" : "SENDGRID_API_KEY missing" };
+      } else if (deep) {
+        const status = await probe("https://api.sendgrid.com/v3/scopes", { Authorization: `Bearer ${sendgridKey}` });
+        email = { key: "email", label: "Email — SendGrid", required: false, status, verified: true, detail: status === "ok" ? "key valid (sender must still be verified)" : undefined };
+      } else {
+        email = { key: "email", label: "Email — SendGrid", required: false, status: "ok", verified: false };
+      }
+
+      // ── Auth (Clerk) and Web Search (Tavily) — presence only. Clerk is
+      //    validated continuously at runtime; Tavily probing costs credits.
+      const auth: Integration = {
+        key: "auth",
+        label: "Auth — Clerk",
+        required: true,
+        status: present(process.env.CLERK_SECRET_KEY) ? "ok" : "not_configured",
+        verified: false,
+      };
+      const webSearch: Integration = {
+        key: "web_search",
+        label: "Web Search — Tavily",
+        required: false,
+        status: present(process.env.TAVILY_API_KEY) ? "ok" : "not_configured",
+        verified: false,
+      };
+
+      return {
+        db: dbOk,
+        redis: redisOk,
+        llmProvider: providerId || null,
+        deep,
+        integrations: [llm, auth, email, webSearch] as Integration[],
+      };
+    }),
 
   // ── Roles ──────────────────────────────────────────────────────────────────
   listRoles: techAdminProcedure.query(async ({ ctx }) => {

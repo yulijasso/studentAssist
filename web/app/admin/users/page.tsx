@@ -875,11 +875,8 @@ function EditUserModal({
 
         <ModalFooter borderTop="1px solid" borderColor="gray.100" px={6} py={3} flexDir="column" gap={2}>
           <Text fontSize="10px" color="gray.400" textAlign="center">
-            To change a user's email or institution, create a new invitation via the{" "}
-            <ChakraLink as={NextLink} href="/admin/invitations" color="blue.400" fontWeight="500">
-              Invitations
-            </ChakraLink>{" "}
-            tab.
+            To change a user's institution, assign a different role below, or have
+            their institution admin invite them from the dashboard.
           </Text>
           <Button variant="ghost" size="sm" onClick={onClose} isDisabled={isPending} borderRadius="full">
             Close

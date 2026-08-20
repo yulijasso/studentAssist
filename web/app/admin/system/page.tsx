@@ -22,6 +22,7 @@ import {
   Stat,
   StatLabel,
   StatNumber,
+  Progress,
 } from "@chakra-ui/react";
 import {
   FiUsers,
@@ -271,24 +272,60 @@ export default function AdminSystemPage() {
           mb={8}
         >
           <Text fontSize="sm" fontWeight="600" color="gray.700" mb={4}>
-            Requests by Institution (Today)
+            Requests vs Daily Quota (Today)
           </Text>
           <Table size="sm" variant="simple">
             <Thead bg="gray.50">
               <Tr>
                 <Th px={0} fontSize="10px" py={2}>Institution</Th>
-                <Th px={0} fontSize="10px" py={2} isNumeric>Requests</Th>
+                <Th px={0} fontSize="10px" py={2} isNumeric>Used / Limit</Th>
+                <Th px={0} fontSize="10px" py={2} w="40%">Utilization</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {usageStats.cities.map((c) => (
+              {usageStats.cities.map((c) => {
+                const limit = c.dailyLimit ?? null;
+                const pct = limit ? Math.min(100, Math.round((c.requestsToday / limit) * 100)) : null;
+                const scheme = pct === null ? "gray" : pct >= 90 ? "red" : pct >= 70 ? "orange" : "green";
+                return (
                   <Tr key={c.tenantId}>
-                    <Td px={0} fontSize="xs" color="gray.700">{c.cityName}</Td>
-                    <Td px={0} fontSize="xs" fontWeight="600" isNumeric>
+                    <Td px={0} fontSize="xs" color="gray.700">
+                      <HStack spacing={2}>
+                        <Text>{c.cityName}</Text>
+                        {pct !== null && pct >= 90 && (
+                          <Badge colorScheme="red" fontSize="9px" variant="subtle">
+                            {pct >= 100 ? "At limit" : "Near limit"}
+                          </Badge>
+                        )}
+                      </HStack>
+                    </Td>
+                    <Td px={0} fontSize="xs" fontWeight="600" isNumeric whiteSpace="nowrap">
                       {c.requestsToday.toLocaleString()}
+                      <Text as="span" color="gray.400" fontWeight="400">
+                        {" / "}{limit ? limit.toLocaleString() : "∞"}
+                      </Text>
+                    </Td>
+                    <Td px={0} pl={4}>
+                      {pct === null ? (
+                        <Text fontSize="10px" color="gray.400">No limit set</Text>
+                      ) : (
+                        <HStack spacing={2}>
+                          <Progress
+                            value={pct}
+                            size="xs"
+                            colorScheme={scheme}
+                            borderRadius="full"
+                            flex={1}
+                          />
+                          <Text fontSize="10px" color={`${scheme}.500`} fontWeight="600" w="32px" textAlign="right">
+                            {pct}%
+                          </Text>
+                        </HStack>
+                      )}
                     </Td>
                   </Tr>
-              ))}
+                );
+              })}
             </Tbody>
           </Table>
         </Box>
