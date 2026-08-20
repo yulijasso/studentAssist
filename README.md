@@ -1,6 +1,6 @@
-# CityAssist
+# Campus Assist
 
-Multi-tenant civic chatbot platform. Cities embed a widget that answers resident questions using a LangGraph agent backed by live web search (Tavily API).
+Multi-tenant university chatbot platform. Institutions embed a widget that answers student questions — admissions, registration, financial aid, academics, housing, campus services — using a LangGraph agent backed by live web search (Tavily API).
 
 ## Stack
 
@@ -30,7 +30,7 @@ Multi-tenant civic chatbot platform. Cities embed a widget that answers resident
 ## Project Structure
 
 ```
-city_bot/
+studentAssist/
 ├── web/          Next.js app — backend API, tRPC routers, admin dashboard
 ├── widget/       Embeddable chat widget (Vite IIFE build)
 └── docker-compose.yml  PostgreSQL 16-alpine + Redis 7-alpine
@@ -85,17 +85,17 @@ make up
 make db-migrate
 ```
 
-### 5. Seed city tenants (run once)
+### 5. Seed the institution tenant (run once)
 
 ```bash
 make db-seed
 ```
 
-The script prints an API key for each city on first run — save them:
+Seeds the UTRGV tenant and its offices. The script prints the tenant's API key on first run — save it:
 
 ```
-CITYASSIST_PHARR_API_KEY=<printed value>
-CITYASSIST_EDINBURG_API_KEY=<printed value>
+Created tenant: The University of Texas Rio Grande Valley
+API key: <printed value>
 ```
 
 The script is idempotent — safe to re-run at any time.
@@ -144,7 +144,7 @@ Database:
   db-migrate       Apply Drizzle migrations
   db-push          Push schema changes (dev only, no migration file)
   db-studio        Open Drizzle Studio (visual DB browser)
-  db-seed          Seed Pharr + Edinburg tenants (idempotent)
+  db-seed          Seed the UTRGV tenant + offices (idempotent)
 
 Widget:
   widget-build     Build widget.js via Vite
@@ -172,12 +172,12 @@ It lists every procedure (`chat.send`, `tenants.*`, `departments.*`, `health.*`)
 ```html
 <script
   src="http://localhost:3000/static/widget.js"
-  data-tenant="city-of-pharr"
+  data-tenant="utrgv"
   async
 ></script>
 ```
 
-Replace `data-tenant` with the city slug and the `src` with your production URL.
+Replace `data-tenant` with the institution slug and the `src` with your production URL.
 
 ---
 
