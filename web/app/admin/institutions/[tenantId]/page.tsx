@@ -410,8 +410,8 @@ function GeneralTab({
           locationName={location}
           onSelect={(newLat, newLng, displayName) => {
             setLocation(displayName);
-            setLat(newLat.toString());
-            setLng(newLng.toString());
+            setLat(newLat != null ? newLat.toString() : "");
+            setLng(newLng != null ? newLng.toString() : "");
           }}
         />
 

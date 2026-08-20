@@ -6,7 +6,7 @@
  */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Text,
@@ -17,7 +17,7 @@ import {
   FormLabel,
   Spinner,
 } from "@chakra-ui/react";
-import { FiMapPin, FiX } from "react-icons/fi";
+import { FiMapPin, FiX, FiAlertCircle } from "react-icons/fi";
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
@@ -39,8 +39,9 @@ interface LocationAutocompleteProps {
   longitude: number | null;
   /** Current location display name. */
   locationName?: string;
-  /** Called when the user selects a location. */
-  onSelect: (lat: number, lng: number, displayName: string) => void;
+  /** Called on change: coordinates when the location geocodes, or null when it
+   *  is not yet verified / not a real place (so it is never placed on the map). */
+  onSelect: (lat: number | null, lng: number | null, displayName: string) => void;
 }
 
 /**
@@ -85,26 +86,47 @@ export default function LocationAutocomplete({
   const [state, setState] = useState(parts[2] || "");
   const [country, setCountry] = useState(parts[3] || "United States");
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Skip the first effect run so mounting the form doesn't wipe a saved location.
+  const firstRun = useRef(true);
 
   const isUS = country === "United States" || country === "USA" || country === "US";
   const hasSelection = latitude != null && longitude != null && latitude !== 0 && locationName;
 
   /**
-   * Builds display name and geocodes when all fields are filled.
+   * On edit: report the location name immediately (so the form registers the
+   * change) but clear coordinates, then geocode. A location is only placed on the
+   * map once it geocodes to real coordinates; if it can't be found, coordinates
+   * stay cleared and the user is told it is not a valid location — no guessing.
    */
   useEffect(() => {
-    if (!city.trim()) return;
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    if (!city.trim()) {
+      setError(null);
+      return;
+    }
 
     const locationParts = [address.trim(), city.trim(), state.trim(), country.trim()].filter(Boolean);
     const displayName = locationParts.join(", ");
 
-    // Debounce geocoding
+    // Unverified until geocoded — report the name, clear coordinates.
+    onSelect(null, null, displayName);
+    setError(null);
+
     const timer = setTimeout(async () => {
       setIsGeocoding(true);
       const coords = await geocode(displayName);
       setIsGeocoding(false);
       if (coords) {
         onSelect(coords.lat, coords.lng, displayName);
+        setError(null);
+      } else {
+        // Not a real place: don't guess, don't map it — tell the user.
+        onSelect(null, null, displayName);
+        setError("That doesn't look like a valid location, so it won't be shown on the map. Check the spelling or enter a real place.");
       }
     }, 600);
 
@@ -117,7 +139,8 @@ export default function LocationAutocomplete({
     setCity("");
     setState("");
     setCountry("United States");
-    onSelect(0, 0, "");
+    setError(null);
+    onSelect(null, null, "");
   }
 
   return (
@@ -229,7 +252,16 @@ export default function LocationAutocomplete({
         <HStack spacing={2} mt={1}>
           <Spinner size="xs" color="gray.400" />
           <Text fontSize="10px" color="gray.400">
-            Finding coordinates...
+            Checking location...
+          </Text>
+        </HStack>
+      )}
+
+      {error && !isGeocoding && (
+        <HStack spacing={2} mt={1} align="center">
+          <FiAlertCircle size={13} color="#e53e3e" />
+          <Text fontSize="11px" color="red.500" fontWeight="500">
+            {error}
           </Text>
         </HStack>
       )}
