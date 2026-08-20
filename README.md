@@ -2,6 +2,12 @@
 
 Multi-tenant university chatbot platform. Institutions embed a widget that answers student questions using a LangGraph agent backed by live web search (Tavily API).
 
+## Features
+
+- **Student widget** — embeddable chat that answers admissions, registration, financial aid, academics, housing, and campus-services questions; grounded in each institution's knowledge base (documents + FAQs) plus web search; streams responses, detects language, routes to the right department, and escalates when a human is needed.
+- **Institution dashboard** (`/dashboard/[slug]`) — conversations console with statuses, assignment, and SLA tracking; knowledge base (documents + FAQs); department/routing config; team management; and analytics (resolution, escalation, SLA).
+- **Platform admin** (`/admin`) — onboard and govern institutions (create, configure, suspend, delete, set request quotas), manage cross-institution users and roles, and monitor platform usage + live system health.
+
 ## Stack
 
 | Layer | Technology | Version |
