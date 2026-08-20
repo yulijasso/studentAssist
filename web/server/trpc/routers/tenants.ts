@@ -12,6 +12,7 @@ import {
 import { listDepartments } from "@/server/services/department_service";
 import { clearAllTenantCaches } from "@/server/services/cache_service";
 import { getTenantBySlug } from "@/server/services/tenant_service";
+import { recordAudit } from "@/server/services/audit_service";
 import { tenants } from "@/server/db/schema";
 
 const TenantCreateInput = z.object({
@@ -36,6 +37,14 @@ export const tenantsRouter = router({
   create: adminProcedure.input(TenantCreateInput).mutation(async ({ ctx, input }) => {
     const tenant = await createTenant(ctx.db, input);
     const departments = await listDepartments(ctx.db, tenant.id, ctx.redis);
+    await recordAudit(ctx.db, {
+      actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+      action: "institution.create",
+      targetType: "institution",
+      targetId: tenant.id,
+      targetLabel: tenant.name,
+      tenantId: tenant.id,
+    });
     return { ...tenant, departments };
   }),
 

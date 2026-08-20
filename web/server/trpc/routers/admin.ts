@@ -20,6 +20,7 @@ import {
 import { sendInvitationEmail } from "@/server/services/email_service";
 import { getUserByClerkId } from "@/server/services/user_service";
 import { getCurrentUsage } from "@/server/services/quota_service";
+import { recordAudit, listAuditLogs, computeDiff } from "@/server/services/audit_service";
 import { PROTECTED_ADMINS } from "../guards";
 
 /** Outcome of an integration check. `ok` from a presence-only check is not
@@ -126,8 +127,24 @@ export const adminRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
+      const [before] = await ctx.db.select().from(tenants).where(eq(tenants.id, id)).limit(1);
       const updated = await updateTenant(ctx.db, ctx.redis, id, data);
       if (!updated) throw new Error("Tenant not found");
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action:
+          data.isActive === false
+            ? "institution.suspend"
+            : data.isActive === true
+              ? "institution.activate"
+              : "institution.update",
+        targetType: "institution",
+        targetId: updated.id,
+        targetLabel: updated.name,
+        tenantId: updated.id,
+        // before → after diff of changed fields (LLM key redacted).
+        metadata: computeDiff(before, updated, Object.keys(data), ["llmApiKey"]),
+      });
       return updated;
     }),
 
@@ -148,6 +165,14 @@ export const adminRouter = router({
         .where(eq(tenants.id, input.tenantId))
         .returning();
       if (!deleted) throw new Error("City not found");
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "institution.delete",
+        targetType: "institution",
+        targetId: deleted.id,
+        targetLabel: deleted.name,
+        tenantId: deleted.id,
+      });
       return { success: true };
     }),
 
@@ -313,8 +338,23 @@ export const adminRouter = router({
         }
       }
 
+      const [beforeMem] = await ctx.db
+        .select()
+        .from(tenantMemberships)
+        .where(eq(tenantMemberships.id, membershipId))
+        .limit(1);
+
       const updated = await updateMembership(ctx.db, membershipId, data);
       if (!updated) throw new Error("Membership not found");
+
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "member.update",
+        targetType: "member",
+        targetId: membershipId,
+        tenantId: updated.tenantId,
+        metadata: computeDiff(beforeMem, updated, Object.keys(data)),
+      });
 
       // Invalidate cached user context so the new role takes effect immediately
       const [user] = await ctx.db
@@ -353,6 +393,14 @@ export const adminRouter = router({
 
       const ok = await removeMembership(ctx.db, input.membershipId);
       if (!ok) throw new Error("Membership not found");
+
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "member.remove",
+        targetType: "member",
+        targetId: input.membershipId,
+        metadata: membership ? { userId: membership.userId } : null,
+      });
 
       if (membership) {
         const [user] = await ctx.db
@@ -419,6 +467,15 @@ export const adminRouter = router({
           .limit(1);
         if (user) await invalidateUserContext(ctx.redis, user.clerkId);
 
+        await recordAudit(ctx.db, {
+          actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+          action: "role.assign",
+          targetType: "user",
+          targetId: input.userId,
+          tenantId: input.tenantId,
+          metadata: { roleId: input.roleId, reactivated: true },
+        });
+
         return updated;
       }
 
@@ -437,6 +494,15 @@ export const adminRouter = router({
         .where(eq(users.id, input.userId))
         .limit(1);
       if (user) await invalidateUserContext(ctx.redis, user.clerkId);
+
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "role.assign",
+        targetType: "user",
+        targetId: input.userId,
+        tenantId: input.tenantId,
+        metadata: { roleId: input.roleId, reactivated: false },
+      });
 
       return membership;
     }),
@@ -735,6 +801,14 @@ export const adminRouter = router({
         .limit(1);
       if (user) await invalidateUserContext(ctx.redis, user.clerkId);
 
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "user.deactivate",
+        targetType: "user",
+        targetId: input.userId,
+        targetLabel: target?.email ?? null,
+      });
+
       return { success: true };
     }),
 
@@ -753,6 +827,13 @@ export const adminRouter = router({
         .where(eq(users.id, input.userId))
         .limit(1);
       if (user) await invalidateUserContext(ctx.redis, user.clerkId);
+
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "user.reactivate",
+        targetType: "user",
+        targetId: input.userId,
+      });
 
       return { success: true };
     }),
@@ -792,8 +873,22 @@ export const adminRouter = router({
 
       await invalidateUserContext(ctx.redis, target.clerkId);
 
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        action: "user.delete",
+        targetType: "user",
+        targetId: input.userId,
+        targetLabel: target.email,
+      });
+
       return { success: true };
     }),
+
+  // ── Audit log ────────────────────────────────────────────────────────────
+  /** Recent governance audit entries (create/suspend/delete, role/member/user changes). */
+  auditLog: techAdminProcedure.query(async ({ ctx }) => {
+    return listAuditLogs(ctx.db, 200);
+  }),
 
   // ── Recent Activity ──────────────────────────────────────────────────────
   recentActivity: techAdminProcedure.query(async ({ ctx }) => {

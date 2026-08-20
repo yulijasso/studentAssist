@@ -391,3 +391,23 @@ export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type ConversationDepartment = typeof conversationDepartments.$inferSelect;
 export type NewConversationDepartment = typeof conversationDepartments.$inferInsert;
+
+// ── Audit log ────────────────────────────────────────────────────────────────
+// Immutable record of governance actions (create/suspend/delete institution,
+// role changes, member removal, user lifecycle). Actor and target are
+// denormalized (labels stored at write time) so entries survive later deletions.
+export const auditLogs = pgTable("audit_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  action: varchar("action", { length: 64 }).notNull(),
+  actorUserId: uuid("actor_user_id").references(() => users.id, { onDelete: "set null" }),
+  actorLabel: varchar("actor_label", { length: 255 }),
+  targetType: varchar("target_type", { length: 32 }).notNull(),
+  targetId: varchar("target_id", { length: 255 }),
+  targetLabel: varchar("target_label", { length: 255 }),
+  tenantId: uuid("tenant_id").references(() => tenants.id, { onDelete: "set null" }),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type NewAuditLog = typeof auditLogs.$inferInsert;

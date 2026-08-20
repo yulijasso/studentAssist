@@ -16,6 +16,7 @@ import {
   FiUsers,
   FiActivity,
   FiHeart,
+  FiShield,
   FiExternalLink,
 } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { label: "Institutions", href: "/admin/institutions", icon: FiMap },
   { label: "Users", href: "/admin/users", icon: FiUsers },
   { label: "System", href: "/admin/system", icon: FiActivity },
+  { label: "Audit", href: "/admin/audit", icon: FiShield },
   { label: "Health", href: "/admin/health", icon: FiHeart },
 ];
 
