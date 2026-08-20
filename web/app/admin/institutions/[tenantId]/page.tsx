@@ -99,7 +99,7 @@ export default function AdminCityDetailPage() {
       <HStack spacing={3} mb={6}>
         <IconButton
           as={NextLink}
-          href="/admin/cities"
+          href="/admin/institutions"
           aria-label="Back"
           icon={<FiArrowLeft />}
           size="sm"
@@ -203,7 +203,7 @@ export default function AdminCityDetailPage() {
               </Flex>
               <Text fontSize="sm" color="gray.500">
                 Document ingestion and FAQ management will be available in Phase
-                2. Use the crawl button to trigger a web crawl for this city.
+                2. Use the crawl button to trigger a web crawl for this institution.
               </Text>
             </Box>
           </TabPanel>
@@ -487,8 +487,8 @@ function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName:
   const deleteInstitution = trpc.admin.deleteInstitution.useMutation({
     onSuccess: () => {
       utils.admin.listInstitutions.invalidate();
-      toast({ title: "City deleted permanently", status: "info", duration: 2000 });
-      router.push("/admin/cities");
+      toast({ title: "Institution deleted permanently", status: "info", duration: 2000 });
+      router.push("/admin/institutions");
     },
     onError: (err) => {
       toast({ title: "Delete failed", description: err.message, status: "error", duration: 5000 });
@@ -596,7 +596,7 @@ function DeleteMemberModal({
                 Remove {memberName}?
               </Text>
               <Text fontSize="xs" color="gray.500">
-                This will revoke their access to this city. They will need a new invitation or to be reassigned a role at a city to regain access.
+                This will revoke their access to this institution. They will need a new invitation or to be reassigned a role at an institution to regain access.
               </Text>
             </Box>
           </Flex>

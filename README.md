@@ -1,6 +1,6 @@
 # Campus Assist
 
-Multi-tenant university chatbot platform. Institutions embed a widget that answers student questions — admissions, registration, financial aid, academics, housing, campus services — using a LangGraph agent backed by live web search (Tavily API).
+Multi-tenant university chatbot platform. Institutions embed a widget that answers student questions using a LangGraph agent backed by live web search (Tavily API).
 
 ## Stack
 
@@ -12,7 +12,7 @@ Multi-tenant university chatbot platform. Institutions embed a widget that answe
 | Agent | LangGraph (`createReactAgent`) | 1.2.2 |
 | LangChain | LangChain.js core | 1.2.32 |
 | LLM — Groq | `llama-3.3-70b-versatile` prod / `llama-3.1-8b-instant` dev | groq sdk 1.1.5 |
-| LLM — Anthropic | Claude (optional, swap via `LLM_PROVIDER`) | 1.3.23 |
+| LLM — OpenRouter | Any OpenAI-compatible model (swap via `LLM_PROVIDER`) | @langchain/openai |
 | Web search | Tavily API | @tavily/core 0.3.1 |
 | Database | PostgreSQL 16-alpine + Drizzle ORM | drizzle-orm 0.36.0 |
 | Migrations | drizzle-kit | 0.28.0 |
@@ -71,6 +71,8 @@ GROQ_API_KEY=          # https://console.groq.com
 TAVILY_API_KEY=        # https://app.tavily.com
 CLERK_SECRET_KEY=      # https://dashboard.clerk.com
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+SENDGRID_API_KEY=      # https://app.sendgrid.com — sends team invitation emails
+SENDGRID_FROM_EMAIL=   # a verified sender address
 ```
 
 ### 3. Start PostgreSQL + Redis
@@ -190,7 +192,7 @@ Replace `data-tenant` with the institution slug and the `src` with your producti
 | `GET /api/tenants/[slug]` | REST | Widget config fetch by slug |
 | `WS /api/ws` | WebSocket | Streaming chat (token-by-token) |
 
-All tRPC procedures require the `X-Campus-Assist-Key` header.
+Widget/chat procedures require the `X-Campus-Assist-Key` header. Admin and institution-dashboard procedures are authenticated with Clerk.
 
 ---
 
@@ -220,7 +222,7 @@ git push
 
 ## Phase 1 Scope
 
-- Web search only via Tavily API — no local knowledge base
+- Answers from a per-institution knowledge base (documents + FAQs) plus live web search (Tavily API)
 - Multi-tenant isolation via `X-Campus-Assist-Key` header
 - Streaming WebSocket chat + non-streaming tRPC mutation
 - Conversation persistence in PostgreSQL (opt-in via `PERSIST_CHAT_MESSAGES=true`)

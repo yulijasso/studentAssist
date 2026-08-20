@@ -205,7 +205,7 @@ export default function AdminCitiesPage() {
                 <Td py={0.5} fontWeight="500">
                   <ChakraLink
                     as={NextLink}
-                    href={`/admin/cities/${city.id}`}
+                    href={`/admin/institutions/${city.id}`}
                     color="blue.600"
                     _hover={{ textDecoration: "underline" }}
                   >
@@ -243,7 +243,7 @@ export default function AdminCitiesPage() {
                     <Tooltip label="Edit institution">
                       <IconButton
                         as={NextLink}
-                        href={`/admin/cities/${city.id}`}
+                        href={`/admin/institutions/${city.id}`}
                         aria-label="Edit"
                         icon={<FiEdit2 />}
                         size="xs"

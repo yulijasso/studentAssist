@@ -177,7 +177,7 @@ export default function AdminOverviewPage() {
       {/* Two-Column Layout */}
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={5} mb={8}>
         {/* Cities Summary */}
-        <SectionCard title="Institutions" href="/admin/cities" icon={FiMap} iconColor="blue.400">
+        <SectionCard title="Institutions" href="/admin/institutions" icon={FiMap} iconColor="blue.400">
           {cities && cities.length > 0 ? (
             <VStack align="stretch" spacing={0}>
               {cities.slice(0, 5).map((city) => (

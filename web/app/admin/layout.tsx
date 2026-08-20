@@ -23,7 +23,7 @@ import { TopNav, TopNavLink, type NavItem } from "@/components/TopNav";
 
 const NAV_ITEMS = [
   { label: "Overview", href: "/admin", icon: FiHome, exact: true },
-  { label: "Institutions", href: "/admin/cities", icon: FiMap },
+  { label: "Institutions", href: "/admin/institutions", icon: FiMap },
   { label: "Users", href: "/admin/users", icon: FiUsers },
   { label: "System", href: "/admin/system", icon: FiActivity },
   { label: "Health", href: "/admin/health", icon: FiHeart },
