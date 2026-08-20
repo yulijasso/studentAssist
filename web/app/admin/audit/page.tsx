@@ -30,7 +30,7 @@ import {
   FormLabel,
   Code,
 } from "@chakra-ui/react";
-import { FiShield, FiDownload, FiChevronRight, FiChevronDown, FiArrowRight } from "react-icons/fi";
+import { FiShield, FiDownload, FiChevronRight, FiChevronDown, FiArrowRight, FiX } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
 
 type AuditEntry = {
@@ -41,6 +41,7 @@ type AuditEntry = {
   targetId: string | null;
   targetLabel: string | null;
   tenantId: string | null;
+  scope: string | null;
   metadata: unknown;
   createdAt: string | Date;
 };
@@ -52,6 +53,8 @@ const ACTION_META: Record<string, { label: string; scheme: string }> = {
   "institution.activate": { label: "Activated institution", scheme: "green" },
   "institution.delete": { label: "Deleted institution", scheme: "red" },
   "role.assign": { label: "Assigned role", scheme: "purple" },
+  "invitation.create": { label: "Sent invitation", scheme: "teal" },
+  "invitation.revoke": { label: "Revoked invitation", scheme: "orange" },
   "member.update": { label: "Updated member", scheme: "blue" },
   "member.remove": { label: "Removed member", scheme: "red" },
   "user.deactivate": { label: "Deactivated user", scheme: "orange" },
@@ -73,6 +76,13 @@ const CATEGORIES = [
   { value: "user", label: "Users" },
   { value: "member", label: "Members" },
   { value: "role", label: "Roles" },
+  { value: "invitation", label: "Invitations" },
+];
+
+const SCOPES = [
+  { value: "all", label: "All sources" },
+  { value: "platform", label: "Tech admin" },
+  { value: "tenant", label: "Institution" },
 ];
 
 const RANGES = [
@@ -92,6 +102,7 @@ export default function AdminAuditPage() {
   const entries = (entriesRaw ?? []) as AuditEntry[];
 
   const [search, setSearch] = useState("");
+  const [scope, setScope] = useState("all");
   const [category, setCategory] = useState("all");
   const [institutionId, setInstitutionId] = useState("all");
   const [actor, setActor] = useState("all");
@@ -122,6 +133,8 @@ export default function AdminAuditPage() {
         const hay = `${e.actorLabel ?? ""} ${e.targetLabel ?? ""} ${e.targetId ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
+      // Scope (tech-admin vs institution-admin action)
+      if (scope !== "all" && e.scope !== scope) return false;
       // Category (action prefix)
       if (category !== "all" && !e.action.startsWith(`${category}.`)) return false;
       // Institution
@@ -146,7 +159,7 @@ export default function AdminAuditPage() {
       }
       return true;
     });
-  }, [entries, search, category, institutionId, actor, destructiveOnly, range, customFrom, customTo]);
+  }, [entries, search, scope, category, institutionId, actor, destructiveOnly, range, customFrom, customTo]);
 
   function exportCsv() {
     const header = ["Date", "Actor", "Action", "Target Type", "Target", "Institution", "Metadata"];
@@ -173,6 +186,7 @@ export default function AdminAuditPage() {
 
   function resetFilters() {
     setSearch("");
+    setScope("all");
     setCategory("all");
     setInstitutionId("all");
     setActor("all");
@@ -183,8 +197,8 @@ export default function AdminAuditPage() {
   }
 
   const hasFilters =
-    search || category !== "all" || institutionId !== "all" || actor !== "all" ||
-    range !== "all" || destructiveOnly;
+    search || scope !== "all" || category !== "all" || institutionId !== "all" ||
+    actor !== "all" || range !== "all" || destructiveOnly;
 
   if (isLoading) {
     return (
@@ -230,6 +244,11 @@ export default function AdminAuditPage() {
             onChange={(e) => setSearch(e.target.value)}
             maxW="180px"
           />
+          <Select size="sm" variant="flushed" value={scope} onChange={(e) => setScope(e.target.value)} maxW="120px">
+            {SCOPES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </Select>
           <Select size="sm" variant="flushed" value={category} onChange={(e) => setCategory(e.target.value)} maxW="130px">
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -271,15 +290,23 @@ export default function AdminAuditPage() {
               Destructive only
             </FormLabel>
           </HStack>
+        </Flex>
+        <Flex mt={3} align="center" justify="space-between">
+          <Text fontSize="11px" color="gray.400">
+            {filtered.length} of {entries.length} entries
+          </Text>
           {hasFilters && (
-            <Button size="xs" variant="ghost" color="gray.400" fontWeight="400" onClick={resetFilters}>
-              Clear
+            <Button
+              size="xs"
+              variant="outline"
+              colorScheme="blue"
+              leftIcon={<Icon as={FiX} boxSize={3} />}
+              onClick={resetFilters}
+            >
+              Clear filters
             </Button>
           )}
         </Flex>
-        <Text fontSize="11px" color="gray.400" mt={3}>
-          {filtered.length} of {entries.length} entries
-        </Text>
       </Box>
 
       {/* Table */}

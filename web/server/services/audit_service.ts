@@ -26,6 +26,8 @@ export interface RecordAuditOpts {
   targetId?: string | null;
   targetLabel?: string | null;
   tenantId?: string | null;
+  /** "platform" = tech-admin action, "tenant" = institution-admin action. */
+  scope?: "platform" | "tenant";
   metadata?: Record<string, unknown> | null;
 }
 
@@ -56,6 +58,7 @@ export async function recordAudit(db: DB, opts: RecordAuditOpts): Promise<void> 
       targetId: opts.targetId ?? null,
       targetLabel: opts.targetLabel ?? null,
       tenantId: opts.tenantId ?? null,
+      scope: opts.scope ?? null,
       metadata: opts.metadata ?? null,
     });
   } catch {

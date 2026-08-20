@@ -33,6 +33,7 @@ import {
   invalidateUserContext,
 } from "@/server/services/membership_service";
 import { sendInvitationEmail } from "@/server/services/email_service";
+import { recordAudit, computeDiff } from "@/server/services/audit_service";
 import { getUserByClerkId } from "@/server/services/user_service";
 import {
   resolveTenantId,
@@ -156,6 +157,17 @@ export const teamRouter = router({
         inviteUrl,
       });
 
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        scope: "tenant",
+        action: "invitation.create",
+        targetType: "invitation",
+        targetId: invitation.id,
+        targetLabel: input.email,
+        tenantId,
+        metadata: { role: role.name },
+      });
+
       return invitation;
     }),
 
@@ -179,7 +191,7 @@ export const teamRouter = router({
     .mutation(async ({ ctx, input }) => {
       const tenantId = resolveTenantId(ctx, input.tenantId);
       const [invite] = await ctx.db
-        .select({ tenantId: invitations.tenantId })
+        .select({ tenantId: invitations.tenantId, email: invitations.email })
         .from(invitations)
         .where(eq(invitations.id, input.id))
         .limit(1);
@@ -188,6 +200,17 @@ export const teamRouter = router({
 
       const ok = await revokeInvitation(ctx.db, input.id);
       if (!ok) throw new Error("Invitation not found");
+
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        scope: "tenant",
+        action: "invitation.revoke",
+        targetType: "invitation",
+        targetId: input.id,
+        targetLabel: invite.email,
+        tenantId,
+      });
+
       return { success: true };
     }),
 
@@ -213,11 +236,15 @@ export const teamRouter = router({
       const tenantId = resolveTenantId(ctx, input.tenantId);
       const { membershipId } = input;
 
-      // Load the membership and confirm it belongs to the caller's tenant.
+      // Load the membership (with current values for the audit diff) and confirm
+      // it belongs to the caller's tenant.
       const [membership] = await ctx.db
         .select({
           userId: tenantMemberships.userId,
           tenantId: tenantMemberships.tenantId,
+          roleId: tenantMemberships.roleId,
+          departmentId: tenantMemberships.departmentId,
+          isActive: tenantMemberships.isActive,
         })
         .from(tenantMemberships)
         .where(eq(tenantMemberships.id, membershipId))
@@ -253,6 +280,16 @@ export const teamRouter = router({
       const updated = await updateMembership(ctx.db, membershipId, data);
       if (!updated) throw new Error("Membership not found");
 
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        scope: "tenant",
+        action: "member.update",
+        targetType: "member",
+        targetId: membershipId,
+        tenantId,
+        metadata: computeDiff(membership, updated, Object.keys(data)),
+      });
+
       await invalidateMemberCache(ctx, updated.userId);
       return updated;
     }),
@@ -287,6 +324,16 @@ export const teamRouter = router({
 
       const ok = await removeMembership(ctx.db, input.membershipId);
       if (!ok) throw new Error("Membership not found");
+
+      await recordAudit(ctx.db, {
+        actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+        scope: "tenant",
+        action: "member.remove",
+        targetType: "member",
+        targetId: input.membershipId,
+        tenantId,
+        metadata: { userId: membership.userId, email: user?.email ?? null },
+      });
 
       await invalidateMemberCache(ctx, membership.userId);
       return { success: true };

@@ -405,6 +405,8 @@ export const auditLogs = pgTable("audit_logs", {
   targetId: varchar("target_id", { length: 255 }),
   targetLabel: varchar("target_label", { length: 255 }),
   tenantId: uuid("tenant_id").references(() => tenants.id, { onDelete: "set null" }),
+  // "platform" = tech-admin action, "tenant" = institution-admin action.
+  scope: varchar("scope", { length: 16 }),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

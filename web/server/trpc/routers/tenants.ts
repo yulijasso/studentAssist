@@ -39,6 +39,7 @@ export const tenantsRouter = router({
     const departments = await listDepartments(ctx.db, tenant.id, ctx.redis);
     await recordAudit(ctx.db, {
       actor: { userId: ctx.user?.userId ?? null, clerkId: ctx.clerkId },
+      scope: "platform",
       action: "institution.create",
       targetType: "institution",
       targetId: tenant.id,
