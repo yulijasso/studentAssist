@@ -1,8 +1,10 @@
 /**
- * City detail page for the tech admin dashboard.
+ * Institution detail page for the tech admin dashboard.
  *
- * Provides tabbed management of a single tenant: General settings (editable),
- * Departments, Knowledge Base (documents + FAQs), and Members.
+ * General settings are editable (operator governance: name, domain, location,
+ * active, delete). Departments, Knowledge Base (documents + FAQs), and Members
+ * are read-only views of the institution's own data — the institution manages
+ * those from its dashboard.
  */
 "use client";
 
@@ -27,19 +29,12 @@ import {
   Badge,
   Button,
   IconButton,
-  Tooltip,
   VStack,
   HStack,
   Input,
   Switch,
   FormControl,
   FormLabel,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
   useToast,
 } from "@chakra-ui/react";
 import { useParams, useRouter } from "next/navigation";
@@ -47,7 +42,6 @@ import {
   FiTrash2,
   FiArrowLeft,
   FiSave,
-  FiRefreshCw,
 } from "react-icons/fi";
 import NextLink from "next/link";
 import { trpc } from "@/lib/trpc";
@@ -72,11 +66,15 @@ export default function AdminCityDetailPage() {
     trpc.admin.listMembers.useQuery({ tenantId });
   const { data: depts, isLoading: deptsLoading } =
     trpc.departments.list.useQuery({ tenantId });
+  const { data: docs, isLoading: docsLoading } =
+    trpc.knowledgeBase.listDocuments.useQuery({ tenantId });
+  const { data: faqs, isLoading: faqsLoading } =
+    trpc.knowledgeBase.listFaqs.useQuery({ tenantId });
 
   const city = cities?.find((c) => c.id === tenantId);
-  const triggerCrawl = trpc.admin.triggerCrawl.useMutation();
-  const utils = trpc.useUtils();
-  const [deletingMember, setDeletingMember] = useState<{ id: string; name: string } | null>(null);
+  // Resolve a department name from its id (for read-only KB/department display).
+  const deptName = (id: string | null) =>
+    id ? depts?.find((d) => d.id === id)?.name ?? "—" : "General";
 
   if (citiesLoading) {
     return (
@@ -177,35 +175,74 @@ export default function AdminCityDetailPage() {
             </Box>
           </TabPanel>
 
-          {/* Knowledge Base Tab */}
+          {/* Knowledge Base Tab (read-only — managed by the institution) */}
           <TabPanel px={0}>
-            <Box
-              bg="white"
-              border="1px solid"
-              borderColor="gray.200"
-              borderRadius="lg"
-              p={6}
-            >
-              <Flex justify="space-between" align="center" mb={4}>
-                <Text fontSize="sm" fontWeight="600" color="gray.700">
-                  Knowledge Base
+            <VStack align="stretch" spacing={4}>
+              {/* Documents */}
+              <Box bg="white" border="1px solid" borderColor="gray.200" borderRadius="lg" overflow="hidden">
+                <Text fontSize="sm" fontWeight="600" color="gray.700" px={5} py={3} borderBottom="1px solid" borderColor="gray.100">
+                  Documents
                 </Text>
-                <Button
-                  leftIcon={<FiRefreshCw />}
-                  size="xs"
-                  colorScheme="blue"
-                  variant="outline"
-                  isLoading={triggerCrawl.isPending}
-                  onClick={() => triggerCrawl.mutate({ tenantId })}
-                >
-                  Trigger Crawl
-                </Button>
-              </Flex>
-              <Text fontSize="sm" color="gray.500">
-                Document ingestion and FAQ management will be available in Phase
-                2. Use the crawl button to trigger a web crawl for this institution.
+                {docsLoading ? (
+                  <Flex p={6} justify="center"><Spinner size="sm" color="blue.500" /></Flex>
+                ) : docs && docs.length > 0 ? (
+                  <Table size="sm">
+                    <Thead bg="gray.50">
+                      <Tr>
+                        <Th fontSize="10px" py={2}>Name</Th>
+                        <Th fontSize="10px" py={2}>Type</Th>
+                        <Th fontSize="10px" py={2}>Department</Th>
+                        <Th fontSize="10px" py={2}>Status</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {docs.map((d) => (
+                        <Tr key={d.id}>
+                          <Td py={1} fontSize="xs">{d.name}</Td>
+                          <Td py={1} fontSize="xs" textTransform="uppercase">{d.type}</Td>
+                          <Td py={1} fontSize="xs">{deptName(d.departmentId)}</Td>
+                          <Td py={1}>
+                            <Badge fontSize="10px" colorScheme={d.status === "ingested" ? "green" : d.status === "failed" ? "red" : "yellow"}>
+                              {d.status}
+                            </Badge>
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                ) : (
+                  <Flex p={6} justify="center"><Text color="gray.500" fontSize="sm">No documents uploaded</Text></Flex>
+                )}
+              </Box>
+
+              {/* FAQs */}
+              <Box bg="white" border="1px solid" borderColor="gray.200" borderRadius="lg" overflow="hidden">
+                <Text fontSize="sm" fontWeight="600" color="gray.700" px={5} py={3} borderBottom="1px solid" borderColor="gray.100">
+                  FAQs
+                </Text>
+                {faqsLoading ? (
+                  <Flex p={6} justify="center"><Spinner size="sm" color="blue.500" /></Flex>
+                ) : faqs && faqs.length > 0 ? (
+                  <VStack align="stretch" spacing={0}>
+                    {faqs.map((f) => (
+                      <Box key={f.id} px={5} py={3} borderBottom="1px solid" borderColor="gray.50" _last={{ borderBottom: "none" }}>
+                        <HStack justify="space-between" align="flex-start" mb={1} gap={3}>
+                          <Text fontSize="xs" fontWeight="600" color="gray.800">{f.question}</Text>
+                          <Badge fontSize="9px" colorScheme="gray" flexShrink={0}>{deptName(f.departmentId)}</Badge>
+                        </HStack>
+                        <Text fontSize="xs" color="gray.500">{f.answer}</Text>
+                      </Box>
+                    ))}
+                  </VStack>
+                ) : (
+                  <Flex p={6} justify="center"><Text color="gray.500" fontSize="sm">No FAQs yet</Text></Flex>
+                )}
+              </Box>
+
+              <Text fontSize="11px" color="gray.400" px={1}>
+                Read-only. The institution manages its knowledge base from its own dashboard.
               </Text>
-            </Box>
+            </VStack>
           </TabPanel>
 
           {/* Members Tab */}
@@ -230,7 +267,6 @@ export default function AdminCityDetailPage() {
                       <Th fontSize="10px" py={2}>Role</Th>
                       <Th fontSize="10px" py={2}>Status</Th>
                       <Th fontSize="10px" py={2}>Joined</Th>
-                      <Th fontSize="10px" py={2}>Actions</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -254,21 +290,6 @@ export default function AdminCityDetailPage() {
                             ? new Date(m.joinedAt).toLocaleDateString()
                             : "—"}
                         </Td>
-                        <Td py={0}>
-                          <Tooltip label="Remove member">
-                            <IconButton
-                              aria-label="Remove"
-                              icon={<FiTrash2 />}
-                              size="xs"
-                              variant="ghost"
-                              color="gray.400"
-                              _hover={{ color: "red.500" }}
-                              onClick={() =>
-                                setDeletingMember({ id: m.id, name: m.userName ?? m.userEmail })
-                              }
-                            />
-                          </Tooltip>
-                        </Td>
                       </Tr>
                     ))}
                   </Tbody>
@@ -286,18 +307,6 @@ export default function AdminCityDetailPage() {
           </TabPanel>
         </TabPanels>
       </Tabs>
-
-      {deletingMember && (
-        <DeleteMemberModal
-          membershipId={deletingMember.id}
-          memberName={deletingMember.name}
-          onClose={() => setDeletingMember(null)}
-          onSuccess={() => {
-            utils.admin.listMembers.invalidate();
-            setDeletingMember(null);
-          }}
-        />
-      )}
     </Box>
   );
 }
@@ -545,95 +554,3 @@ function DeleteCitySection({ tenantId, cityName }: { tenantId: string; cityName:
   );
 }
 
-/**
- * Modal for confirming member removal with typed confirmation.
- */
-function DeleteMemberModal({
-  membershipId,
-  memberName,
-  onClose,
-  onSuccess,
-}: {
-  membershipId: string;
-  memberName: string;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const [confirmText, setConfirmText] = useState("");
-  const toast = useToast();
-
-  const removeMember = trpc.admin.removeMember.useMutation({
-    onSuccess: () => {
-      toast({ title: "Member removed", status: "info", duration: 2000 });
-      onSuccess();
-    },
-    onError: (err) => {
-      toast({ title: "Remove failed", description: err.message, status: "error", duration: 5000 });
-    },
-  });
-
-  return (
-    <Modal isOpen onClose={onClose} size="md" isCentered>
-      <ModalOverlay bg="blackAlpha.400" backdropFilter="blur(4px)" />
-      <ModalContent borderRadius="xl" overflow="hidden" boxShadow="xl">
-        <ModalCloseButton top={3} right={3} size="sm" color="gray.400" _hover={{ color: "gray.600", bg: "transparent" }} />
-
-        <ModalBody px={6} pt={6} pb={5}>
-          <Flex align="center" gap={3} mb={4}>
-            <Flex
-              w={10}
-              h={10}
-              borderRadius="full"
-              bg="red.50"
-              align="center"
-              justify="center"
-              flexShrink={0}
-            >
-              <FiTrash2 size={16} color="#E53E3E" />
-            </Flex>
-            <Box>
-              <Text fontSize="sm" fontWeight="600" color="gray.800" mb={1}>
-                Remove {memberName}?
-              </Text>
-              <Text fontSize="xs" color="gray.500">
-                This will revoke their access to this institution. They will need a new invitation or to be reassigned a role at an institution to regain access.
-              </Text>
-            </Box>
-          </Flex>
-
-          <FormControl>
-            <FormLabel fontSize="xs" color="gray.500" mb={1} textAlign="left">
-              Type &quot;Delete member&quot; to confirm
-            </FormLabel>
-            <Input
-              size="sm"
-              borderRadius="md"
-              placeholder="Delete member"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              autoFocus
-              _focus={{ borderColor: "red.400", boxShadow: "0 0 0 1px #E53E3E" }}
-            />
-          </FormControl>
-        </ModalBody>
-
-        <ModalFooter borderTop="1px solid" borderColor="gray.100" px={6} py={3} justifyContent="center">
-          <Button variant="ghost" size="sm" mr={2} onClick={onClose} borderRadius="full">
-            Cancel
-          </Button>
-          <Button
-            colorScheme="red"
-            size="sm"
-            borderRadius="full"
-            leftIcon={<FiTrash2 />}
-            isLoading={removeMember.isPending}
-            isDisabled={confirmText !== "Delete member"}
-            onClick={() => removeMember.mutate({ membershipId })}
-          >
-            Remove Member
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
