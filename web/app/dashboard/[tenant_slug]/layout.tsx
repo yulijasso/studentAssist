@@ -49,7 +49,7 @@ export default function DashboardLayout({
   const { isLoaded, isSignedIn } = useAuth();
   const slug = params.tenant_slug as string;
   const { tenant } = useTenant();
-  const { role, isTechAdmin, isCityAdmin } = useRole();
+  const { role, isTechAdmin, isInstitutionAdmin } = useRole();
   const { data: memberships, isLoading: membershipsLoading } = trpc.me.memberships.useQuery(
     undefined,
     { enabled: isLoaded && !!isSignedIn },
@@ -87,7 +87,7 @@ export default function DashboardLayout({
   }
 
   const items: NavItem[] = NAV_ITEMS.filter(
-    (item) => !item.adminOnly || isTechAdmin || isCityAdmin,
+    (item) => !item.adminOnly || isTechAdmin || isInstitutionAdmin,
   ).map((item) => {
     const fullPath = `${basePath}${item.href}`;
     return {

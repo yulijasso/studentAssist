@@ -136,14 +136,6 @@ export const adminRouter = router({
       return updated;
     }),
 
-  triggerCrawl: techAdminProcedure
-    .input(z.object({ tenantId: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      // Stub — will connect to crawl service when Firecrawl is implemented
-      console.log(`[admin] Crawl triggered for tenant ${input.tenantId}`);
-      return { success: true, message: "Crawl triggered (stub)" };
-    }),
-
   /** Permanently deletes a city/tenant and all associated data (cascades via FK). */
   deleteInstitution: techAdminProcedure
     .input(z.object({ tenantId: z.string().uuid() }))

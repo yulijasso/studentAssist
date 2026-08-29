@@ -41,7 +41,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { FiRefreshCw, FiEdit2, FiPlus, FiMap, FiTrash2, FiSearch, FiExternalLink } from "react-icons/fi";
+import { FiEdit2, FiPlus, FiMap, FiTrash2, FiSearch, FiExternalLink } from "react-icons/fi";
 import { trpc } from "@/lib/trpc";
 
 const InstitutionMap = dynamic(() => import("@/components/InstitutionMap"), { ssr: false });
@@ -52,7 +52,6 @@ const LocationAutocomplete = dynamic(
 
 export default function AdminCitiesPage() {
   const { data: cities, isLoading } = trpc.admin.listInstitutions.useQuery();
-  const triggerCrawl = trpc.admin.triggerCrawl.useMutation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [showMap, setShowMap] = useState(false);
   const [deletingCity, setDeletingCity] = useState<{ id: string; name: string } | null>(null);
@@ -248,18 +247,6 @@ export default function AdminCitiesPage() {
                         icon={<FiEdit2 />}
                         size="xs"
                         variant="ghost"
-                      />
-                    </Tooltip>
-                    <Tooltip label="Trigger crawl">
-                      <IconButton
-                        aria-label="Crawl"
-                        icon={<FiRefreshCw />}
-                        size="xs"
-                        variant="ghost"
-                        isLoading={triggerCrawl.isPending}
-                        onClick={() =>
-                          triggerCrawl.mutate({ tenantId: city.id })
-                        }
                       />
                     </Tooltip>
                     <Tooltip label="Delete institution">

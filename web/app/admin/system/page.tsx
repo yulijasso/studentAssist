@@ -39,7 +39,7 @@ import { trpc } from "@/lib/trpc";
 
 const ROLE_COLORS: Record<string, string> = {
   tech_admin: "purple",
-  city_admin: "blue",
+  institution_admin: "blue",
   supervisor: "teal",
   staff: "cyan",
   member: "gray",

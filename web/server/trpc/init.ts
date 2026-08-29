@@ -6,7 +6,7 @@
  *   - tenantProcedure      — requires a valid X-Campus-Assist-Key header
  *   - adminProcedure       — requires a valid Clerk JWT (backward-compatible)
  *   - techAdminProcedure   — requires role === 'tech_admin'
- *   - tenantAdminProcedure — requires role === 'city_admin' + matching tenantId
+ *   - tenantAdminProcedure — requires role === 'institution_admin' + matching tenantId
  */
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -46,12 +46,12 @@ export const techAdminProcedure = t.procedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-// Tenant admin procedure — requires city_admin (or tech_admin) role
+// Tenant admin procedure — requires institution_admin (or tech_admin) role
 export const tenantAdminProcedure = t.procedure.use(({ ctx, next }) => {
   if (ctx.role === "tech_admin") {
     return next({ ctx });
   }
-  if (ctx.role !== "city_admin") {
+  if (ctx.role !== "institution_admin") {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "City admin access required" });
   }
   return next({ ctx });

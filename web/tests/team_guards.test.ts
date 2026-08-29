@@ -2,8 +2,8 @@
  * Security-boundary tests for the tenant-scoped team router guards.
  *
  * These directly exercise the guard functions that back Issue #2's acceptance
- * criteria: tenant isolation (a city_admin only ever touches their own tenant),
- * no privilege escalation (a city_admin cannot grant tech_admin), protected
+ * criteria: tenant isolation (a institution_admin only ever touches their own tenant),
+ * no privilege escalation (a institution_admin cannot grant tech_admin), protected
  * admins, and unchanged tech_admin behavior.
  */
 import { describe, it, expect } from "vitest";
@@ -43,20 +43,20 @@ const TENANT_B = "22222222-2222-2222-2222-222222222222";
 // ── resolveTenantId: tenant isolation ─────────────────────────────────────────
 
 describe("resolveTenantId", () => {
-  it("lets a city_admin act on their own tenant", () => {
-    const ctx = { role: "city_admin", userTenantId: TENANT_A };
+  it("lets a institution_admin act on their own tenant", () => {
+    const ctx = { role: "institution_admin", userTenantId: TENANT_A };
     expect(resolveTenantId(ctx, TENANT_A)).toBe(TENANT_A);
   });
 
-  it("rejects a city_admin acting on a different tenant (cross-tenant, server-verified)", async () => {
-    const ctx = { role: "city_admin", userTenantId: TENANT_A };
+  it("rejects a institution_admin acting on a different tenant (cross-tenant, server-verified)", async () => {
+    const ctx = { role: "institution_admin", userTenantId: TENANT_A };
     const err = await catchTRPC(() => resolveTenantId(ctx, TENANT_B));
     expect(err).toBeInstanceOf(TRPCError);
     expect(err?.code).toBe("FORBIDDEN");
   });
 
-  it("rejects a city_admin with no tenant association", async () => {
-    const ctx = { role: "city_admin", userTenantId: null };
+  it("rejects a institution_admin with no tenant association", async () => {
+    const ctx = { role: "institution_admin", userTenantId: null };
     const err = await catchTRPC(() => resolveTenantId(ctx, TENANT_A));
     expect(err?.code).toBe("FORBIDDEN");
   });

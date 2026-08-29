@@ -50,7 +50,7 @@ const LocationAutocomplete = dynamic(() => import("@/components/LocationAutocomp
 
 const ROLE_COLORS: Record<string, string> = {
   tech_admin: "purple",
-  city_admin: "blue",
+  institution_admin: "blue",
   supervisor: "teal",
   staff: "cyan",
   member: "gray",

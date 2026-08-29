@@ -139,11 +139,11 @@ describe("syncUser invitation priority", () => {
     return { role: "none", source: "waiting" };
   }
 
-  it("ADMIN_EMAIL always gets tech_admin even with city_admin invitation", () => {
+  it("ADMIN_EMAIL always gets tech_admin even with institution_admin invitation", () => {
     const result = simulateSyncDecision({
       hasExistingMembership: false,
       hasPendingInvitation: true,
-      invitationRole: "city_admin",
+      invitationRole: "institution_admin",
       isAdminEmail: true,
     });
     expect(result.role).toBe("tech_admin");
@@ -153,7 +153,7 @@ describe("syncUser invitation priority", () => {
   it("ADMIN_EMAIL always gets tech_admin even with existing membership", () => {
     const result = simulateSyncDecision({
       hasExistingMembership: true,
-      existingRole: "city_admin",
+      existingRole: "institution_admin",
       hasPendingInvitation: false,
       invitationRole: "",
       isAdminEmail: true,
@@ -198,12 +198,12 @@ describe("syncUser invitation priority", () => {
   it("preserves existing membership for non-admin users", () => {
     const result = simulateSyncDecision({
       hasExistingMembership: true,
-      existingRole: "city_admin",
+      existingRole: "institution_admin",
       hasPendingInvitation: true,
       invitationRole: "staff",
       isAdminEmail: false,
     });
-    expect(result.role).toBe("city_admin");
+    expect(result.role).toBe("institution_admin");
     expect(result.source).toBe("existing_membership");
   });
 
@@ -262,19 +262,19 @@ describe("getUserContext prefers global membership", () => {
     return globalMembership ?? memberships[0];
   }
 
-  it("prefers tech_admin (global) over city_admin", () => {
+  it("prefers tech_admin (global) over institution_admin", () => {
     const result = pickMembership([
-      { tenantId: "tenant-1", roleName: "city_admin" },
+      { tenantId: "tenant-1", roleName: "institution_admin" },
       { tenantId: null, roleName: "tech_admin" },
     ]);
     expect(result?.roleName).toBe("tech_admin");
   });
 
-  it("returns city_admin when no global membership exists", () => {
+  it("returns institution_admin when no global membership exists", () => {
     const result = pickMembership([
-      { tenantId: "tenant-1", roleName: "city_admin" },
+      { tenantId: "tenant-1", roleName: "institution_admin" },
     ]);
-    expect(result?.roleName).toBe("city_admin");
+    expect(result?.roleName).toBe("institution_admin");
   });
 
   it("returns null for empty memberships", () => {
@@ -305,10 +305,10 @@ describe("useRole prefers global membership", () => {
     return membership?.roleName ?? null;
   }
 
-  it("returns tech_admin over city_admin for same user", () => {
+  it("returns tech_admin over institution_admin for same user", () => {
     const result = pickRole(
       [
-        { tenantId: "tenant-1", roleName: "city_admin" },
+        { tenantId: "tenant-1", roleName: "institution_admin" },
         { tenantId: null, roleName: "tech_admin" },
       ],
       "tenant-1",
@@ -316,12 +316,12 @@ describe("useRole prefers global membership", () => {
     expect(result).toBe("tech_admin");
   });
 
-  it("returns city_admin when no global membership", () => {
+  it("returns institution_admin when no global membership", () => {
     const result = pickRole(
-      [{ tenantId: "tenant-1", roleName: "city_admin" }],
+      [{ tenantId: "tenant-1", roleName: "institution_admin" }],
       "tenant-1",
     );
-    expect(result).toBe("city_admin");
+    expect(result).toBe("institution_admin");
   });
 
   it("returns null when no matching membership", () => {

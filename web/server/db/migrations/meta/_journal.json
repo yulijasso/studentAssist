@@ -8,6 +8,13 @@
       "when": 1787243200438,
       "tag": "0000_secret_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787243805104,
+      "tag": "0001_seed_roles_rename_admin",
+      "breakpoints": true
     }
   ]
 }

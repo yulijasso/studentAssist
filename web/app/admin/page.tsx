@@ -549,7 +549,7 @@ function EmptyState({ text }: { text: string }) {
 
 const ROLE_COLORS: Record<string, string> = {
   tech_admin: "purple.400",
-  city_admin: "blue.400",
+  institution_admin: "blue.400",
   supervisor: "teal.400",
   staff: "cyan.400",
   member: "gray.400",
@@ -557,7 +557,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 const ROLE_COLOR_SCHEME: Record<string, string> = {
   tech_admin: "purple",
-  city_admin: "blue",
+  institution_admin: "blue",
   supervisor: "teal",
   staff: "cyan",
   member: "gray",

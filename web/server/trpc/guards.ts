@@ -2,7 +2,7 @@
  * Shared authorization guards for admin / tenant-admin procedures.
  *
  * These helpers centralize the security rules that keep tenant admins
- * (`city_admin`) confined to their own tenant and prevent privilege
+ * (`institution_admin`) confined to their own tenant and prevent privilege
  * escalation. Keeping them here (rather than inline in each router) makes
  * the boundaries auditable and unit-testable in isolation.
  */
@@ -34,7 +34,7 @@ export const NON_GRANTABLE_ROLES = ["tech_admin"];
  * Resolves the tenant the caller is allowed to act on, rejecting cross-tenant access.
  *
  * - `tech_admin` (global) may act on any tenant — the requested id is trusted.
- * - `city_admin` is locked to their own tenant (`ctx.userTenantId`); any request
+ * - `institution_admin` is locked to their own tenant (`ctx.userTenantId`); any request
  *   for a different tenant is rejected server-side (not merely hidden in the UI).
  *
  * @throws TRPCError FORBIDDEN on a missing tenant association or cross-tenant attempt.

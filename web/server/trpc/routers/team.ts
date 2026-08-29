@@ -1,8 +1,8 @@
 /**
- * Tenant-scoped team management — lets a `city_admin` invite and manage users
+ * Tenant-scoped team management — lets a `institution_admin` invite and manage users
  * within their OWN institution, without global tech-admin access.
  *
- * Every procedure is gated by `tenantAdminProcedure` (admits `city_admin` or
+ * Every procedure is gated by `tenantAdminProcedure` (admits `institution_admin` or
  * `tech_admin`) and then resolves an effective tenant server-side via
  * `resolveTenantId`, so a tenant admin can never act outside their own tenant.
  * Role grants are constrained by `assertRoleGrantable` (no `tech_admin`), and

@@ -2,7 +2,7 @@
  * Team management — tenant-scoped members & invitations for a single institution.
  *
  * Backed by the `team.*` tRPC router (gated by tenantAdminProcedure), so a
- * `city_admin` manages only their own tenant. All calls pass the current
+ * `institution_admin` manages only their own tenant. All calls pass the current
  * `tenantId` (resolved from the URL slug); the server independently verifies
  * ownership — the UI scoping is convenience, not the security boundary.
  */
@@ -46,7 +46,7 @@ import { useTenant } from "@/lib/use-tenant";
 
 const ROLE_COLORS: Record<string, string> = {
   tech_admin: "purple",
-  city_admin: "blue",
+  institution_admin: "blue",
   supervisor: "teal",
   staff: "cyan",
   member: "gray",

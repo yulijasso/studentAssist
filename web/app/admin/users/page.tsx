@@ -54,7 +54,7 @@ import { trpc } from "@/lib/trpc";
 
 const ROLE_COLORS: Record<string, string> = {
   tech_admin: "purple",
-  city_admin: "blue",
+  institution_admin: "blue",
   supervisor: "teal",
   staff: "cyan",
   member: "gray",
@@ -213,7 +213,7 @@ export default function AdminUsersPage() {
           >
             <option value="all">All Roles</option>
             <option value="tech_admin">Tech Admin</option>
-            <option value="city_admin">Institution Admin</option>
+            <option value="institution_admin">Institution Admin</option>
             <option value="supervisor">Supervisor</option>
             <option value="staff">Staff</option>
             <option value="member">Member</option>
