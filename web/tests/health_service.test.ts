@@ -110,12 +110,12 @@ describe("checkSystemHealth (presence mode)", () => {
     expect(find(r2, "web_search").status).toBe("ok");
   });
 
-  it("marks LLM and auth as required, email and web search as optional", async () => {
+  it("marks LLM, auth, and email as required; web search as optional", async () => {
     const { db, redis } = makeDeps();
     const r = await checkSystemHealth(db, redis, false);
     expect(find(r, "llm").required).toBe(true);
     expect(find(r, "auth").required).toBe(true);
-    expect(find(r, "email").required).toBe(false);
+    expect(find(r, "email").required).toBe(true); // invitations depend on SendGrid
     expect(find(r, "web_search").required).toBe(false);
   });
 });

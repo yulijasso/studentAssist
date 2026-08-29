@@ -101,12 +101,12 @@ export async function checkSystemHealth(
   const emailPresent = present(sendgridKey) && !!process.env.SENDGRID_FROM_EMAIL;
   let email: Integration;
   if (!emailPresent) {
-    email = { key: "email", label: "Email — SendGrid", required: false, status: "not_configured", verified: false, detail: present(sendgridKey) ? "SENDGRID_FROM_EMAIL missing" : "SENDGRID_API_KEY missing" };
+    email = { key: "email", label: "Email — SendGrid", required: true, status: "not_configured", verified: false, detail: present(sendgridKey) ? "SENDGRID_FROM_EMAIL missing" : "SENDGRID_API_KEY missing" };
   } else if (deep) {
     const status = await probe("https://api.sendgrid.com/v3/scopes", { Authorization: `Bearer ${sendgridKey}` });
-    email = { key: "email", label: "Email — SendGrid", required: false, status, verified: true, detail: status === "ok" ? "key valid (sender must still be verified)" : undefined };
+    email = { key: "email", label: "Email — SendGrid", required: true, status, verified: true, detail: status === "ok" ? "key valid (sender must still be verified)" : undefined };
   } else {
-    email = { key: "email", label: "Email — SendGrid", required: false, status: "ok", verified: false };
+    email = { key: "email", label: "Email — SendGrid", required: true, status: "ok", verified: false };
   }
 
   // ── Auth (Clerk) and Web Search (Tavily) — presence only.
